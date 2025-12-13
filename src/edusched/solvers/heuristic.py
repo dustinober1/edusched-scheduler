@@ -146,6 +146,7 @@ class HeuristicSolver(SolverBackend):
             resource_lookup=indices.resource_lookup,
             calendar_lookup=indices.calendar_lookup,
             request_lookup=indices.request_lookup,
+            building_lookup=indices.building_lookup,
         )
 
     def _schedule_occurrence(

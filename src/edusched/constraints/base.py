@@ -30,6 +30,7 @@ class ConstraintContext:
     resource_lookup: Dict[str, "Resource"]
     calendar_lookup: Dict[str, "Calendar"]
     request_lookup: Dict[str, "SessionRequest"]
+    building_lookup: Dict[str, "Building"] = None
 
 
 class Constraint(ABC):

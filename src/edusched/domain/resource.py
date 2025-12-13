@@ -13,6 +13,9 @@ class Resource:
     concurrency_capacity: int = 1
     attributes: Dict[str, Any] = field(default_factory=dict)
     availability_calendar_id: Optional[str] = None
+    building_id: Optional[str] = None  # Reference to building if applicable
+    floor_number: Optional[int] = None   # Floor within the building
+    capacity: Optional[int] = None        # Physical capacity (seats, etc.)
 
     def can_satisfy(self, requirements: Dict[str, Any]) -> bool:
         """

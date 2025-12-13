@@ -20,6 +20,15 @@ class SessionRequest:
     modality: Literal["online", "in_person", "hybrid"] = "in_person"
     required_attributes: Dict[str, Any] = field(default_factory=dict)
 
+    # Building and room preferences
+    preferred_building_id: Optional[str] = None
+    required_building_id: Optional[str] = None  # Must be in this building
+    required_resource_types: Optional[Dict[str, int]] = None  # e.g., {"classroom": 1, "breakout": 2}
+
+    # Day-specific requirements (days of week when resources are needed)
+    day_requirements: Optional[Dict[int, List[str]]] = None  # {0: ["classroom", "breakout"], 2: ["classroom"]}
+    # Where 0=Monday, 1=Tuesday, ..., 6=Sunday
+
     def validate(self) -> List[ValidationError]:
         """
         Validate request parameters including timezone-aware datetime requirement.

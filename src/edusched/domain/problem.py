@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from edusched.domain.calendar import Calendar
     from edusched.domain.resource import Resource
     from edusched.domain.session_request import SessionRequest
+    from edusched.domain.building import Building
     from edusched.objectives.base import Objective
 
 
@@ -19,6 +20,7 @@ class ProblemIndices:
     resource_lookup: Dict[str, "Resource"]
     calendar_lookup: Dict[str, "Calendar"]
     request_lookup: Dict[str, "SessionRequest"]
+    building_lookup: Dict[str, "Building"]
     resources_by_type: Dict[str, List["Resource"]]
     qualified_resources: Dict[str, List[str]]
     time_occupancy_maps: Dict[str, Set[Tuple]]
@@ -36,6 +38,7 @@ class Problem:
     objectives: List["Objective"] = field(default_factory=list)
     locked_assignments: List["Assignment"] = field(default_factory=list)
     institutional_calendar_id: Optional[str] = None
+    buildings: List["Building"] = field(default_factory=list)  # Buildings for location context
 
     def validate(self) -> List[str]:
         """
@@ -98,6 +101,7 @@ class Problem:
         resource_lookup = {r.id: r for r in self.resources}
         calendar_lookup = {c.id: c for c in self.calendars}
         request_lookup = {r.id: r for r in self.requests}
+        building_lookup = {b.id: b for b in self.buildings}
 
         # Build resources by type
         resources_by_type: Dict[str, List["Resource"]] = {}
@@ -145,6 +149,7 @@ class Problem:
             resource_lookup=resource_lookup,
             calendar_lookup=calendar_lookup,
             request_lookup=request_lookup,
+            building_lookup=building_lookup,
             resources_by_type=resources_by_type,
             qualified_resources=qualified_resources,
             time_occupancy_maps=time_occupancy_maps,
