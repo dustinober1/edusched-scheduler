@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/holiday_calendar.py
+# hypothesis_version: 6.148.7
+
+[120, 180, 2000, 2100, '2days_mt', '2days_tf', '3days_mw', '3days_wf', '4days_mt', '4days_tf', '5days', 'holiday', 'id', 'non-empty string', 'year']

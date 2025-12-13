@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/teacher_constraints.py
+# hypothesis_version: 6.148.7
+
+[3600, '%H:%M', 'Assignment', 'friday', 'monday', 'saturday', 'sunday', 'thursday', 'tuesday', 'wednesday']

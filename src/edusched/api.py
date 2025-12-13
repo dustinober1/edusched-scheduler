@@ -5,7 +5,7 @@ from typing import Optional
 
 from edusched.domain.problem import Problem
 from edusched.domain.result import Result
-from edusched.errors import BackendError, ValidationError
+from edusched.errors import BackendError, ValidationError, MissingOptionalDependency
 
 # Import solver backends
 from edusched.solvers.heuristic import HeuristicSolver

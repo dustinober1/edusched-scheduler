@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/utils/capacity_utils.py
+# hypothesis_version: 6.148.7
+
+[0.0, 0.1, 0.5, 1.0, 1.1, 'avg_capacity', 'classroom', 'count', 'max_capacity', 'min_capacity', 'total_capacity']

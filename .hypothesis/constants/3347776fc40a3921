@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/utils/scheduling_utils.py
+# hypothesis_version: 6.148.7
+
+[120, 180, 3600, '%H:%M', '00:00', '23:59', '5days', 'UTC', 'end', 'start']
