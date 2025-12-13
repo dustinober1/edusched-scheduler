@@ -6,7 +6,7 @@ Convert the EduSched design into a series of incremental implementation tasks th
 
 ## Tasks
 
-- [ ] 1. Set up project structure and core dependencies
+- [x] 1. Set up project structure and core dependencies
   - Create package directory structure with src/edusched layout
   - Configure pyproject.toml with core dependencies (python-dateutil, typing-extensions) and optional extras
   - Set up development environment with ruff, mypy, pytest, and hypothesis

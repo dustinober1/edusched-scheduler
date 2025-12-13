@@ -1,0 +1,10 @@
+pyproject.toml
+src/edusched/__init__.py
+src/edusched/api.py
+src/edusched/errors.py
+src/edusched.egg-info/PKG-INFO
+src/edusched.egg-info/SOURCES.txt
+src/edusched.egg-info/dependency_links.txt
+src/edusched.egg-info/requires.txt
+src/edusched.egg-info/top_level.txt
+tests/test_project_setup.py
