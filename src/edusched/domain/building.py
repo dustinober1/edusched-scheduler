@@ -1,8 +1,11 @@
 """Building domain model for managing physical locations."""
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Dict, List, Optional, Tuple
 from enum import Enum
+
+from edusched.domain.resource import BlackoutPeriod
 
 
 class BuildingType(Enum):
@@ -51,6 +54,9 @@ class Building:
     floors: Dict[int, Floor] = field(default_factory=dict)
     amenities: List[str] = field(default_factory=list)  # e.g., ["elevator", "ramp", "parking"]
 
+    # Building-wide blackout periods
+    blackout_periods: List[BlackoutPeriod] = field(default_factory=list)
+
     def add_floor(self, floor_number: int) -> Floor:
         """Add a floor to the building."""
         if floor_number not in self.floors:
@@ -97,6 +103,30 @@ class Building:
     def is_same_building(self, other_building: 'Building') -> bool:
         """Check if this is the same building."""
         return self.id == other_building.id
+
+    def add_blackout_period(self, blackout: BlackoutPeriod) -> None:
+        """Add a building-wide blackout period."""
+        self.blackout_periods.append(blackout)
+        self.blackout_periods.sort(key=lambda b: b.start_date)
+
+    def get_blackout_periods_in_range(self, start_date: date, end_date: date) -> List[BlackoutPeriod]:
+        """Get all building blackout periods within a date range."""
+        return [
+            blackout for blackout in self.blackout_periods
+            if blackout.start_date <= end_date and blackout.end_date >= start_date
+        ]
+
+    def is_date_blacked_out(self, check_date: date) -> Tuple[bool, Optional[BlackoutPeriod]]:
+        """
+        Check if a date has a building-wide blackout.
+
+        Returns:
+            Tuple of (is_blacked_out, blackout_period)
+        """
+        for blackout in self.blackout_periods:
+            if blackout.affects_date(check_date):
+                return True, blackout
+        return False, None
 
     def get_floors_between(self, floor1: int, floor2: int) -> int:
         """Get the number of floors between two floors."""

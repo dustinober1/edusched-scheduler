@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from enum import Enum
 
 
@@ -59,6 +59,39 @@ class MaintenanceWindow:
 
 
 @dataclass
+class BlackoutPeriod:
+    """Blackout period when a resource is completely unavailable."""
+    start_date: date
+    end_date: date
+    reason: str
+    affects_all_rooms: bool = False  # If True, applies to all rooms in building
+
+    # Optional constraints
+    affected_room_types: List[RoomType] = field(default_factory=list)
+    affected_resources: List[str] = field(default_factory=list)  # Specific resource IDs
+    exception_dates: List[date] = field(default_factory=list)  # Dates when blackout doesn't apply
+
+    def affects_date(self, check_date: date) -> bool:
+        """Check if a date is affected by this blackout period."""
+        if check_date in self.exception_dates:
+            return False
+        return self.start_date <= check_date <= self.end_date
+
+    def affects_resource(self, resource_id: str, room_type: Optional[RoomType] = None) -> bool:
+        """Check if a specific resource is affected by this blackout."""
+        if self.affects_all_rooms:
+            return True
+
+        if resource_id in self.affected_resources:
+            return True
+
+        if room_type and room_type in self.affected_room_types:
+            return True
+
+        return False
+
+
+@dataclass
 class Resource:
     """Represents a bookable resource (instructor, room, campus, online slot, etc.)."""
 
@@ -112,6 +145,10 @@ class Resource:
     last_maintenance: Optional[datetime] = None
     next_inspection: Optional[datetime] = None
 
+    # Blackout periods (building-wide or room-specific)
+    blackout_periods: List[BlackoutPeriod] = field(default_factory=list)
+    building_blackouts: List[BlackoutPeriod] = field(default_factory=list)  # Inherited from building
+
     # Cost and billing
     hourly_rate: Optional[float] = None
     requires_payment: bool = False
@@ -133,6 +170,19 @@ class Resource:
         # Check resource status
         if self.status != ResourceStatus.AVAILABLE:
             return False, f"Resource status is {self.status.value}"
+
+        # Check blackout periods first (they override everything)
+        check_date = start_time.date()
+
+        # Check room-specific blackouts
+        for blackout in self.blackout_periods:
+            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+                return False, f"Room blackout: {blackout.reason}"
+
+        # Check building-wide blackouts
+        for blackout in self.building_blackouts:
+            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+                return False, f"Building blackout: {blackout.reason}"
 
         # Check maintenance windows
         for maintenance in self.maintenance_windows:
@@ -288,3 +338,43 @@ class Resource:
         self.maintenance_windows.append(window)
         # Sort maintenance windows by start time
         self.maintenance_windows.sort(key=lambda w: w.start_time)
+
+    def add_blackout_period(self, blackout: BlackoutPeriod) -> None:
+        """Add a blackout period for this resource."""
+        self.blackout_periods.append(blackout)
+        # Sort blackout periods by start date
+        self.blackout_periods.sort(key=lambda b: b.start_date)
+
+    def remove_blackout_period(self, blackout_start: date) -> bool:
+        """Remove a blackout period by start date."""
+        for i, blackout in enumerate(self.blackout_periods):
+            if blackout.start_date == blackout_start:
+                del self.blackout_periods[i]
+                return True
+        return False
+
+    def get_blackout_periods_in_range(self, start_date: date, end_date: date) -> List[BlackoutPeriod]:
+        """Get all blackout periods within a date range."""
+        return [
+            blackout for blackout in self.blackout_periods
+            if blackout.start_date <= end_date and blackout.end_date >= start_date
+        ]
+
+    def is_date_blacked_out(self, check_date: date) -> Tuple[bool, Optional[str]]:
+        """
+        Check if a specific date is blacked out.
+
+        Returns:
+            Tuple of (is_blacked_out, reason)
+        """
+        # Check room-specific blackouts
+        for blackout in self.blackout_periods:
+            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+                return True, blackout.reason
+
+        # Check building-wide blackouts
+        for blackout in self.building_blackouts:
+            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+                return True, blackout.reason
+
+        return False, None
