@@ -1,0 +1,15 @@
+Block_Name,Start_Time,End_Time,Days_of_Week,Start_Date,End_Date,Institution_Type,Description,Mandatory
+Common Lunch,11:30,13:30,"0,1,2,3,4",,,,,TRUE
+Department Meetings,15:00,16:30,2,,,,,TRUE
+All-Hands Meeting,14:00,15:0,0,2024-09-01,2024-12-31,,Monthly first Monday of month,FALSE
+Faculty Senate Meeting,13:00,15:00,3,,,,,Bi-weekly,FALSE
+Student Organization Time,17:00,19:00,"0,1,2,3,4",,,,Student activities,FALSE
+Research Seminar,16:00,17:30,3,,,,,Research university only,FALSE
+Morning Setup Time,07:30,08:30,"0,1,2,3,4",,,,Staff only,FALSE
+Evening Cleanup,21:00,22:00,"0,1,2,3,4",,,,Staff only,FALSE
+Registration Period,09:00,17:00,"0,1,2,3,4",2024-08-20,2024-08-23,community_college,"Priority registration",FALSE
+Advising Hours,10:00,15:00,"0,1,2,3,4",2024-04-01,2024-04-05,community_college,"Academic advising week",FALSE
+Final Exam Block Morning,09:00,12:00,"0,1,2,3,4",2024-12-09,2024-12-13,research_university,"Reserved for exams",TRUE
+Final Exam Block Afternoon,13:00,17:00,"0,1,2,3,4",2024-12-09,2024-12-13,research_university,"Reserved for exams",TRUE
+Open House,10:00,14:00,5,2024-10-26,2024-10-26,,"Campus tours",FALSE
+Campus Maintenance Window,22:00,06:00,"0,1,2,3,4,5,6",,,,Building maintenance,FALSE

@@ -1,0 +1,12 @@
+Department_ID,Department_Name,Head_Chair_ID,Office_Building_ID,Office_Room,Contact_Email,Contact_Phone,Unavailable_Days,Meeting_Time,Special_Notes
+cs,Computer Science,prof_johnson,engineering,Eng305,cs@university.edu,(555) 123-4567,"",,Active Research: AI, Machine Learning, Cybersecurity
+math,Mathematics,prof_chen,science,Sci205,math@university.edu,(555) 123-4568,"",Wednesday 15:00-16:30,"Weekly colloquium on Thursdays"
+physics,Physics,prof_williams,science,Sci302,physics@university.edu,(555) 123-4569,"",Tuesday 14:00-15:00,"Lab safety training required"
+chemistry,Chemistry,prof_davis,science,Sci301,chemistry@university.edu,(555) 123-4570,"",,"Chemical inventory managed quarterly"
+biology,Biology,prof_martinez,science,Sci303,biology@university.edu,(555) 123-4571,"",Friday 13:00-14:00,"Field trips scheduled throughout semester"
+english,English,dr_thompson,humanities,Hum201,english@university.edu,(555) 123-4572,"",,"Writing center located in Humanities Hall"
+history,History,dr_lee,humanities,Hum202,history@university.edu,(555) 123-4573,"Monday",,"Special collections available in library"
+business,Business,dr_anderson,main,Admin405,business@university.edu,(555) 123-4574,"",Thursday 08:00-09:00,"Executive education programs"
+psychology,Psychology,dr_brown,humanities,Hum203,psychology@university.edu,(555) 123-4575,"",,"Research labs in basement"
+music,Music,dr_taylor,student_center,Music101,music@university.edu,(555) 123-4576,"",,"Practice rooms require booking"
+art,Art,dr_wilson,student_center,Art201,art@university.edu,(555) 123-4577,"",,"Studio spaces available 24/7 with keycard"

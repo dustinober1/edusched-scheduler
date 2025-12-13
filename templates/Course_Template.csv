@@ -1,0 +1,11 @@
+Course_ID,Course_Title,Department_ID,Teacher_ID,Duration_Hours,Number_of_Occurrences,Earliest_Date,Latest_Date,Scheduling_Pattern,Enrollment_Count,Min_Capacity,Max_Capacity,Preferred_Building_ID,Required_Building_ID,Required_Resource_Types,Preferred_Time_Slots,Avoid_Holidays,Min_Gap_Days,Max_Occurrences_Per_Week,Cohort_ID,Modality
+CS401,Advanced Algorithms,cs,prof_johnson,2,15,2024-08-26 09:00,2024-12-13 17:00,3days_wf,45,30,60,,,lab:1;classroom:1,"09:00-11:00",TRUE,7,2,CS_Seniors,in_person
+MATH301,Linear Algebra,math,prof_chen,1.5,28,2024-08-26 09:00,2024-12-13 17:00,2days_tf,35,25,40,,,classroom:1,"10:00-11:30",TRUE,3,1,MATH_Majors,in_person
+PHYS201,Physics I,physics,prof_williams,3,14,2024-08-26 08:00,2024-12-13 17:00,2days_tf,60,40,75,science,lab:1;classroom:1,"08:00-11:00",TRUE,7,2,Physics_Majors,in_person
+CHEM101,General Chemistry,chemistry,prof_davis,1.5,28,2024-08-26 09:00,2024-12-13 17:00,4days_mt,35,25,50,science,lab:1;classroom:1,"13:00-14:30",TRUE,2,1,Chem_Majors,in_person
+BIO210,Cell Biology,biology,prof_martinez,2,14,2024-08-26 09:00,2024-12-13 17:00,3days_mw,45,30,50,science,lab:1;classroom:1,"10:00-12:00",TRUE,7,1,Bio_Majors,in_person
+CS101,Introduction to Programming,cs,prof_johnson,1,28,2024-08-26 09:00,2024-12-13 17:00,5days,50,30,75,,,classroom:1,"09:00-10:00",TRUE,1,1,All_Majors,in_person
+MATH101,Calculus I,math,prof_chen,1.5,28,2024-08-26 09:00,2024-12-13 17:00,5days,40,30,50,,,classroom:1,"10:00-11:30",TRUE,1,1,STEM_Majors,in_person
+CS499,Senior Capstone,cs,prof_johnson,3,10,2024-08-26 14:00,2024-12-13 17:00,2days_mt,15,10,25,engineering,classroom:1;computer_lab:1,"14:00-17:00",TRUE,7,1,CS_Seniors,in_person
+BIO499,Research Seminar,biology,prof_martinez,2,7,2024-08-26 15:00,2024-12-13 17:00,4days_tf,20,10,30,,,classroom:1,"15:00-17:00",TRUE,7,1,Grad_Students,in_person
+PHYS399,Laboratory Methods,physics,prof_williams,3,10,2024-08-26 09:00,2024-12-13 17:00,3days_wf,25,15,30,science,lab:2;classroom:1,"09:00-12:00",TRUE,7,1,Physics_Majors,in_person
