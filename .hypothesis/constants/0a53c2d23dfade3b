@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/hard_constraints.py
+# hypothesis_version: 6.148.7
+
+['Assignment', 'hard.attribute_match', 'hard.blackout_dates', 'hard.max_per_day', 'hard.no_overlap', 'timedelta']

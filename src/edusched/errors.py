@@ -8,17 +8,24 @@ class ValidationError(Exception):
 
     def __init__(
         self,
-        field: str,
-        expected_format: str,
-        actual_value: Any,
+        message: Optional[str] = None,
+        field: Optional[str] = None,
+        expected_format: Optional[str] = None,
+        actual_value: Optional[Any] = None,
     ) -> None:
+        if message is None:
+            # Backwards compatibility - construct message from fields
+            if field is None or expected_format is None or actual_value is None:
+                raise ValueError("Must provide either message or all field parameters")
+            message = (
+                f"Validation error in field '{field}': "
+                f"expected {expected_format}, got {actual_value!r}"
+            )
+
+        self.message = message
         self.field = field
         self.expected_format = expected_format
         self.actual_value = actual_value
-        message = (
-            f"Validation error in field '{field}': "
-            f"expected {expected_format}, got {actual_value!r}"
-        )
         super().__init__(message)
 
 
@@ -33,10 +40,15 @@ class InfeasibilityError(Exception):
 class BackendError(Exception):
     """Raised when a solver backend encounters an error."""
 
-    def __init__(self, backend_name: str, error_details: str) -> None:
-        self.backend_name = backend_name
-        self.error_details = error_details
-        message = f"Backend '{backend_name}' error: {error_details}"
+    def __init__(self, message: str, backend_name: Optional[str] = None, error_details: Optional[str] = None) -> None:
+        if backend_name and error_details:
+            # Backwards compatibility
+            message = f"Backend '{backend_name}' error: {error_details}"
+            self.backend_name = backend_name
+            self.error_details = error_details
+        else:
+            self.message = message
+            self.backend_name = backend_name
         super().__init__(message)
 
 

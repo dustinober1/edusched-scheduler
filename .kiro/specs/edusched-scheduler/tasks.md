@@ -13,8 +13,8 @@ Convert the EduSched design into a series of incremental implementation tasks th
   - Create __init__.py files and basic package imports
   - _Requirements: 7.5, 8.1, 8.5_
 
-- [ ] 2. Implement core domain model with timezone validation
-  - [ ] 2.1 Create SessionRequest class with timezone-aware datetime validation
+- [-] 2. Implement core domain model with timezone validation
+  - [x] 2.1 Create SessionRequest class with timezone-aware datetime validation
     - Implement SessionRequest dataclass with all required fields
     - Add validate() method with timezone-aware datetime checking
     - Include modality and attribute requirements support

@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/api.py
+# hypothesis_version: 6.148.7
+
+['auto', 'heuristic', 'ortools']
