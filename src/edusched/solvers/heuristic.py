@@ -188,7 +188,7 @@ class HeuristicSolver(SolverBackend):
             )
 
             # Try to assign resources
-            if self._assign_resources(assignment, context, indices):
+            if self._assign_resources(assignment, context, indices, solution):
                 # Check all constraints
                 if self._check_constraints(assignment, solution, context):
                     return assignment
@@ -204,6 +204,7 @@ class HeuristicSolver(SolverBackend):
         assignment: "Assignment",
         context: "ConstraintContext",
         indices: "ProblemIndices",
+        current_solution: List["Assignment"],
     ) -> bool:
         """
         Assign appropriate resources to an assignment.
@@ -228,7 +229,7 @@ class HeuristicSolver(SolverBackend):
                             continue
 
                     # Check if not already booked
-                    if self._is_resource_available(resource.id, assignment, context, solution):
+                    if self._is_resource_available(resource.id, assignment, context, current_solution):
                         suitable_resources.append(resource.id)
 
             if suitable_resources:
