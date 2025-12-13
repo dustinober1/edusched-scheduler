@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from edusched.domain.problem import Problem
     from edusched.domain.resource import Resource
     from edusched.domain.session_request import SessionRequest
+    from edusched.domain.building import Building
+    from edusched.domain.department import Department
+    from edusched.domain.teacher import Teacher
 
 
 @dataclass
@@ -31,6 +34,8 @@ class ConstraintContext:
     calendar_lookup: Dict[str, "Calendar"]
     request_lookup: Dict[str, "SessionRequest"]
     building_lookup: Dict[str, "Building"] = None
+    department_lookup: Dict[str, "Department"] = None
+    teacher_lookup: Dict[str, "Teacher"] = None
 
 
 class Constraint(ABC):

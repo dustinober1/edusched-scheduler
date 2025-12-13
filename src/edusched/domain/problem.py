@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from edusched.domain.resource import Resource
     from edusched.domain.session_request import SessionRequest
     from edusched.domain.building import Building
+    from edusched.domain.department import Department
+    from edusched.domain.teacher import Teacher
+    from edusched.domain.holiday_calendar import HolidayCalendar
     from edusched.objectives.base import Objective
 
 
@@ -21,6 +24,8 @@ class ProblemIndices:
     calendar_lookup: Dict[str, "Calendar"]
     request_lookup: Dict[str, "SessionRequest"]
     building_lookup: Dict[str, "Building"]
+    department_lookup: Dict[str, "Department"]
+    teacher_lookup: Dict[str, "Teacher"]
     resources_by_type: Dict[str, List["Resource"]]
     qualified_resources: Dict[str, List[str]]
     time_occupancy_maps: Dict[str, Set[Tuple]]
@@ -39,6 +44,9 @@ class Problem:
     locked_assignments: List["Assignment"] = field(default_factory=list)
     institutional_calendar_id: Optional[str] = None
     buildings: List["Building"] = field(default_factory=list)  # Buildings for location context
+    departments: List["Department"] = field(default_factory=list)  # Academic departments
+    teachers: List["Teacher"] = field(default_factory=list)  # Teaching staff
+    holiday_calendar: Optional["HolidayCalendar"] = None  # Academic calendar with holidays
 
     def validate(self) -> List[str]:
         """
@@ -102,6 +110,8 @@ class Problem:
         calendar_lookup = {c.id: c for c in self.calendars}
         request_lookup = {r.id: r for r in self.requests}
         building_lookup = {b.id: b for b in self.buildings}
+        department_lookup = {d.id: d for d in self.departments}
+        teacher_lookup = {t.id: t for t in self.teachers}
 
         # Build resources by type
         resources_by_type: Dict[str, List["Resource"]] = {}
@@ -150,6 +160,8 @@ class Problem:
             calendar_lookup=calendar_lookup,
             request_lookup=request_lookup,
             building_lookup=building_lookup,
+            department_lookup=department_lookup,
+            teacher_lookup=teacher_lookup,
             resources_by_type=resources_by_type,
             qualified_resources=qualified_resources,
             time_occupancy_maps=time_occupancy_maps,

@@ -20,6 +20,16 @@ class SessionRequest:
     modality: Literal["online", "in_person", "hybrid"] = "in_person"
     required_attributes: Dict[str, Any] = field(default_factory=dict)
 
+    # Enrollment and capacity requirements
+    enrollment_count: int = 0  # Number of students enrolled in the class
+    min_capacity: int = 0      # Minimum classroom capacity required
+    max_capacity: Optional[int] = None  # Maximum acceptable classroom capacity (None for no limit)
+
+    # Department and teacher information
+    department_id: Optional[str] = None  # Department offering this course
+    teacher_id: Optional[str] = None  # Primary instructor
+    additional_teachers: Optional[List[str]] = None  # TAs, co-instructors, etc.
+
     # Building and room preferences
     preferred_building_id: Optional[str] = None
     required_building_id: Optional[str] = None  # Must be in this building
@@ -28,6 +38,13 @@ class SessionRequest:
     # Day-specific requirements (days of week when resources are needed)
     day_requirements: Optional[Dict[int, List[str]]] = None  # {0: ["classroom", "breakout"], 2: ["classroom"]}
     # Where 0=Monday, 1=Tuesday, ..., 6=Sunday
+
+    # Scheduling pattern and preferences
+    scheduling_pattern: Optional[str] = None  # "5days", "4days_mt", "4days_tf", "3days_mw", "3days_wf", "2days_mt", "2days_tf"
+    preferred_time_slots: Optional[List[Dict[str, str]]] = None  # [{ "start": "09:00", "end": "11:00" }]
+    avoid_holidays: bool = True  # Default to avoiding holidays
+    min_gap_between_occurrences: Optional[timedelta] = None  # Minimum gap between class occurrences
+    max_occurrences_per_week: Optional[int] = None  # Maximum occurrences in a single week
 
     def validate(self) -> List[ValidationError]:
         """
@@ -84,6 +101,44 @@ class SessionRequest:
                     field="number_of_occurrences",
                     expected_format="positive integer",
                     actual_value=self.number_of_occurrences,
+                )
+            )
+
+        # Validate enrollment count
+        if self.enrollment_count < 0:
+            errors.append(
+                ValidationError(
+                    field="enrollment_count",
+                    expected_format="non-negative integer",
+                    actual_value=self.enrollment_count,
+                )
+            )
+
+        # Validate capacity requirements
+        if self.min_capacity < 0:
+            errors.append(
+                ValidationError(
+                    field="min_capacity",
+                    expected_format="non-negative integer",
+                    actual_value=self.min_capacity,
+                )
+            )
+
+        if self.max_capacity is not None and self.max_capacity < 0:
+            errors.append(
+                ValidationError(
+                    field="max_capacity",
+                    expected_format="non-negative integer or None",
+                    actual_value=self.max_capacity,
+                )
+            )
+
+        if self.min_capacity > 0 and self.max_capacity is not None and self.min_capacity > self.max_capacity:
+            errors.append(
+                ValidationError(
+                    field="capacity_range",
+                    expected_format="min_capacity <= max_capacity",
+                    actual_value=f"{self.min_capacity} > {self.max_capacity}",
                 )
             )
 

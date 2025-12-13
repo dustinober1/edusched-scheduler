@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Dict, List, Optional, Set
 
 from edusched.solvers.base import SolverBackend
+from edusched.utils.scheduling_utils import OccurrenceSpreader
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from edusched.constraints.base import Constraint, ConstraintContext
@@ -23,6 +25,7 @@ class HeuristicSolver(SolverBackend):
 
     def __init__(self, max_attempts: int = 1000):
         self.max_attempts = max_attempts
+        self.spreader = None  # Will be initialized with holiday calendar
 
     def solve(
         self,
@@ -60,6 +63,21 @@ class HeuristicSolver(SolverBackend):
         problem.canonicalize()
         indices = problem.build_indices()
 
+        # Initialize occurrence spreader with holiday calendar
+        if problem.holiday_calendar:
+            self.spreader = OccurrenceSpreader(problem.holiday_calendar)
+        else:
+            # Create default holiday calendar if none provided
+            from edusched.domain.holiday_calendar import HolidayCalendar
+            current_year = datetime.now().year
+            default_calendar = HolidayCalendar(
+                id="default_academic",
+                name="Default Academic Calendar",
+                year=current_year,
+                excluded_weekdays={5, 6}  # Weekends
+            )
+            self.spreader = OccurrenceSpreader(default_calendar)
+
         # Create constraint context
         context = self._create_context(problem, indices)
 
@@ -70,11 +88,11 @@ class HeuristicSolver(SolverBackend):
         unscheduled = []
         scheduled_requests: Set[str] = set(a.request_id for a in solution)
 
-        # Sort requests by priority (earliest latest_date first for more constrained)
+        # Sort requests by priority using new priority system (longer classes first)
         requests_to_schedule = [
             r for r in problem.requests if r.id not in scheduled_requests
         ]
-        requests_to_schedule.sort(key=lambda r: r.latest_date)
+        requests_to_schedule = self.spreader.sort_requests_by_priority(requests_to_schedule)
 
         for request in requests_to_schedule:
             scheduled_occurrences = 0
@@ -147,6 +165,8 @@ class HeuristicSolver(SolverBackend):
             calendar_lookup=indices.calendar_lookup,
             request_lookup=indices.request_lookup,
             building_lookup=indices.building_lookup,
+            department_lookup=indices.department_lookup,
+            teacher_lookup=indices.teacher_lookup,
         )
 
     def _schedule_occurrence(
@@ -158,47 +178,98 @@ class HeuristicSolver(SolverBackend):
         indices: "ProblemIndices",
     ) -> Optional["Assignment"]:
         """
-        Try to schedule a single occurrence of a request.
-
-        Uses greedy approach with backtracking support.
+        Try to schedule a single occurrence of a request using pattern-based scheduling.
         """
         from edusched.domain.assignment import Assignment
 
-        # Generate candidate timeslots aligned with calendar granularity
+        # Get calendar for granularity
         calendar = context.calendar_lookup.get(context.problem.institutional_calendar_id)
         if calendar:
             granularity = calendar.timeslot_granularity
         else:
             granularity = timedelta(minutes=15)  # Default
 
-        # Start from earliest_date, try timeslots aligned to granularity
-        current = request.earliest_date
-        attempts = 0
-
-        while current <= request.latest_date and attempts < self.max_attempts:
-            # Check if this timeslot is available
-            end_time = current + request.duration
-
-            # Create tentative assignment
-            assignment = Assignment(
-                request_id=request.id,
-                occurrence_index=occurrence_index,
-                start_time=current,
-                end_time=end_time,
-                cohort_id=request.cohort_id,
+        # Generate spread-out occurrence dates if this is the first occurrence
+        if occurrence_index == 0:
+            schedule_dates = self.spreader.generate_occurrence_dates(
+                request,
+                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
+            )
+        else:
+            # For subsequent occurrences, find the next available date
+            schedule_dates = self._find_next_available_dates(
+                request,
+                solution,
+                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
             )
 
-            # Try to assign resources
-            if self._assign_resources(assignment, context, indices, solution):
-                # Check all constraints
-                if self._check_constraints(assignment, solution, context):
-                    return assignment
+        # Try each date in the preferred order (try more dates to handle conflicts)
+        for schedule_date in schedule_dates[:10]:  # Try up to 10 dates
+            # Get available time slots for this date
+            time_slots = self.spreader.generate_time_slots(
+                schedule_date,
+                request,
+                granularity,
+                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
+            )
 
-            # Move to next aligned timeslot
-            current = self._next_aligned_timeslot(current, granularity, request.latest_date)
-            attempts += 1
+            # Try each time slot
+            for start_time, end_time in time_slots:
+                # Create tentative assignment
+                assignment = Assignment(
+                    request_id=request.id,
+                    occurrence_index=occurrence_index,
+                    start_time=start_time,
+                    end_time=end_time,
+                    cohort_id=request.cohort_id,
+                )
+
+                # Try to assign resources
+                if self._assign_resources(assignment, context, indices, solution):
+                    # Check all constraints
+                    if self._check_constraints(assignment, solution, context):
+                        return assignment
 
         return None
+
+    def _find_next_available_dates(
+        self,
+        request: "SessionRequest",
+        solution: List["Assignment"],
+        timezone: ZoneInfo
+    ) -> List:
+        """Find next available dates for additional occurrences."""
+        from datetime import date as date_type
+
+        # Get existing assignments for this request
+        existing_dates = [
+            a.start_time.date() for a in solution if a.request_id == request.id
+        ]
+
+        # Generate all possible dates within range
+        all_dates = self.spreader.holiday_calendar.get_available_days_in_range(
+            request.earliest_date.date(),
+            request.latest_date.date()
+        )
+
+        # Get allowed pattern days
+        pattern = request.scheduling_pattern or "5days"
+        pattern_days = self.spreader.holiday_calendar.get_weekly_pattern_days(pattern)
+
+        # Filter to only pattern-matching dates that aren't already used
+        available_dates = [
+            d for d in all_dates
+            if d not in existing_dates and d.weekday() in pattern_days
+        ]
+
+        # Sort to spread out from existing dates (prefer dates farther from already scheduled)
+        if existing_dates:
+            # Sort by maximum distance from any existing date (prefer spread-out dates)
+            available_dates.sort(key=lambda d: -min(abs((d - ed).days) for ed in existing_dates))
+        else:
+            available_dates.sort()  # Just chronological if no existing dates
+
+        return available_dates[:10]  # Return up to 10 candidate dates
 
     def _assign_resources(
         self,
@@ -212,6 +283,8 @@ class HeuristicSolver(SolverBackend):
 
         Returns True if successful assignment found, False otherwise.
         """
+        from edusched.utils.capacity_utils import check_capacity_fit
+
         request = context.request_lookup[assignment.request_id]
 
         # For each resource type needed, find suitable resource
@@ -223,6 +296,23 @@ class HeuristicSolver(SolverBackend):
             suitable_resources = []
             for resource in resources:
                 if resource.can_satisfy(request.required_attributes):
+                    # Check capacity for classrooms
+                    if resource_type == "classroom" and request.modality != "online":
+                        # Skip if no capacity info
+                        if resource.capacity is None:
+                            continue
+
+                        # Check if classroom can fit the enrollment
+                        can_fit, _ = check_capacity_fit(
+                            resource,
+                            request.enrollment_count,
+                            request.min_capacity or 0,
+                            request.max_capacity,
+                            buffer_percent=0.1  # 10% buffer
+                        )
+                        if not can_fit:
+                            continue
+
                     # Check availability if calendar specified
                     if resource.availability_calendar_id:
                         calendar = context.calendar_lookup[resource.availability_calendar_id]
@@ -231,12 +321,26 @@ class HeuristicSolver(SolverBackend):
 
                     # Check if not already booked
                     if self._is_resource_available(resource.id, assignment, context, current_solution):
-                        suitable_resources.append(resource.id)
+                        suitable_resources.append(resource)
 
             if suitable_resources:
-                # For simplicity, just take the first available
-                # In a more sophisticated implementation, we might balance load
-                assigned_resources[resource_type] = [suitable_resources[0]]
+                # Sort by efficiency for classrooms (closest fit to required capacity)
+                if resource_type == "classroom" and request.modality != "online":
+                    from edusched.utils.capacity_utils import calculate_efficiency_score
+                    required_capacity = max(request.enrollment_count, request.min_capacity or 0)
+                    required_with_buffer = int(required_capacity * 1.1)  # 10% buffer
+
+                    suitable_resources.sort(
+                        key=lambda r: calculate_efficiency_score(
+                            context.resource_lookup[r.id].capacity or 0,
+                            required_with_buffer,
+                            request.max_capacity
+                        ),
+                        reverse=True
+                    )
+
+                # Assign the best resource
+                assigned_resources[resource_type] = [suitable_resources[0].id]
 
         if assigned_resources:
             assignment.assigned_resources = assigned_resources
@@ -252,12 +356,45 @@ class HeuristicSolver(SolverBackend):
         solution: List["Assignment"],
     ) -> bool:
         """Check if resource is available during the assignment period."""
+        from datetime import timedelta
+
+        # Get setup/cleanup time requirements
+        setup_minutes = 15  # Default setup time
+        cleanup_minutes = 10  # Default cleanup time
+
+        # Check if teacher has specific setup requirements
+        request = context.request_lookup.get(assignment.request_id)
+        if request and request.teacher_id:
+            teacher = context.teacher_lookup.get(request.teacher_id)
+            if teacher:
+                setup_minutes = teacher.setup_time_minutes
+                cleanup_minutes = teacher.cleanup_time_minutes
+
         # Check against existing solution (including locked assignments)
+        # Include setup/cleanup buffer times
+        assignment_start = assignment.start_time - timedelta(minutes=setup_minutes)
+        assignment_end = assignment.end_time + timedelta(minutes=cleanup_minutes)
+
         for existing in solution:
             for resource_ids in existing.assigned_resources.values():
                 if resource_id in resource_ids:
-                    if assignment.start_time < existing.end_time and assignment.end_time > existing.start_time:
+                    # Also add buffer for existing assignment
+                    existing_setup = 15
+                    existing_cleanup = 10
+                    if existing.request_id != assignment.request_id:
+                        existing_request = context.request_lookup.get(existing.request_id)
+                        if existing_request and existing_request.teacher_id:
+                            existing_teacher = context.teacher_lookup.get(existing_request.teacher_id)
+                            if existing_teacher:
+                                existing_setup = existing_teacher.setup_time_minutes
+                                existing_cleanup = existing_teacher.cleanup_time_minutes
+
+                    existing_start = existing.start_time - timedelta(minutes=existing_setup)
+                    existing_end = existing.end_time + timedelta(minutes=existing_cleanup)
+
+                    if assignment_start < existing_end and assignment_end > existing_start:
                         return False
+
         return True
 
     def _check_constraints(
