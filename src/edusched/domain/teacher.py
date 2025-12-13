@@ -46,6 +46,20 @@ class Teacher:
     cleanup_time_minutes: int = 10  # time needed after class ends
     preferred_block_gap: int = 30  # minimum minutes between consecutive classes
 
+    # Course teaching capabilities
+    qualified_courses: List[str] = field(default_factory=list)  # Course IDs teacher can teach
+    preferred_courses: List[str] = field(default_factory=list)  # Courses teacher prefers to teach
+    excluded_courses: List[str] = field(default_factory=list)  # Courses teacher cannot/will not teach
+
+    # Course-specific requirements
+    course_setup_requirements: Dict[str, int] = field(default_factory=dict)  # Course ID -> setup minutes
+    course_cleanup_requirements: Dict[str, int] = field(default_factory=dict)  # Course ID -> cleanup minutes
+    course_buffer_requirements: Dict[str, Dict[str, int]] = field(default_factory=dict)  # Course ID -> {before, after} days
+
+    # Concurrent course restrictions
+    mutually_exclusive_courses: List[List[str]] = field(default_factory=list)  # Courses that cannot run same term
+    concurrent_teaching_limit: int = 1  # Max courses that can be taught simultaneously
+
     def validate(self) -> List[ValidationError]:
         """
         Validate teacher parameters.
@@ -330,4 +344,114 @@ class Teacher:
             "weekly_hours": weekly_hours,
             "max_daily": max(daily_hours.values()) if daily_hours else 0,
             "max_weekly": max(weekly_hours.values()) if weekly_hours else 0,
+        }
+
+    def can_teach_course(self, course_id: str) -> Tuple[bool, str]:
+        """
+        Check if teacher is qualified and willing to teach a course.
+
+        Args:
+            course_id: The course ID to check
+
+        Returns:
+            Tuple of (can_teach, reason_if_not)
+        """
+        # Check if course is explicitly excluded
+        if course_id in self.excluded_courses:
+            return False, "Teacher has excluded this course"
+
+        # Check if teacher is qualified
+        if self.qualified_courses and course_id not in self.qualified_courses:
+            return False, "Teacher not qualified to teach this course"
+
+        return True, "Qualified"
+
+    def prefers_teaching(self, course_id: str) -> bool:
+        """Check if teacher prefers teaching this course."""
+        return course_id in self.preferred_courses
+
+    def get_course_setup_time(self, course_id: str) -> int:
+        """Get setup time required for a specific course."""
+        return self.course_setup_requirements.get(course_id, self.setup_time_minutes)
+
+    def get_course_cleanup_time(self, course_id: str) -> int:
+        """Get cleanup time required for a specific course."""
+        return self.course_cleanup_requirements.get(course_id, self.cleanup_time_minutes)
+
+    def get_course_buffer_days(self, course_id: str) -> Dict[str, int]:
+        """Get buffer days required before/after a course."""
+        return self.course_buffer_requirements.get(course_id, {"before": 0, "after": 0})
+
+    def add_course_requirement(
+        self,
+        course_id: str,
+        setup_minutes: Optional[int] = None,
+        cleanup_minutes: Optional[int] = None,
+        buffer_days_before: Optional[int] = None,
+        buffer_days_after: Optional[int] = None
+    ) -> None:
+        """Add specific requirements for teaching a course."""
+        if setup_minutes is not None:
+            self.course_setup_requirements[course_id] = setup_minutes
+        if cleanup_minutes is not None:
+            self.course_cleanup_requirements[course_id] = cleanup_minutes
+        if buffer_days_before is not None or buffer_days_after is not None:
+            before = buffer_days_before or 0
+            after = buffer_days_after or 0
+            self.course_buffer_requirements[course_id] = {"before": before, "after": after}
+
+    def courses_conflict_with(self, course_id: str) -> List[str]:
+        """Get list of courses that conflict with the given course."""
+        conflicts = []
+        for conflict_group in self.mutually_exclusive_courses:
+            if course_id in conflict_group:
+                for other_course in conflict_group:
+                    if other_course != course_id:
+                        conflicts.append(other_course)
+        return conflicts
+
+    def can_teach_concurrently_with(self, course_id: str, other_courses: List[str]) -> bool:
+        """Check if teacher can teach this course alongside others."""
+        # Check mutual exclusivity
+        conflicts = self.courses_conflict_with(course_id)
+        if any(conflict in other_courses for conflict in conflicts):
+            return False
+
+        # Check concurrent teaching limit
+        if self.concurrent_teaching_limit <= 1:
+            return len(other_courses) == 0
+
+        return len(other_courses) < self.concurrent_teaching_limit
+
+    def get_teaching_load_for_period(
+        self,
+        start_date: date,
+        end_date: date,
+        assignments: List["Assignment"]
+    ) -> Dict[str, float]:
+        """
+        Calculate teacher's teaching load for a period.
+
+        Returns:
+            Dictionary with load metrics (hours, courses, etc.)
+        """
+        total_hours = 0
+        course_count = 0
+        days_teaching = set()
+
+        for assignment in assignments:
+            # Check if this assignment is for this teacher
+            # (This would need proper teacher assignment tracking)
+            # For now, assume all assignments are for this teacher
+            if assignment.start_time.date() >= start_date and assignment.start_time.date() <= end_date:
+                duration_hours = (assignment.end_time - assignment.start_time).total_seconds() / 3600
+                total_hours += duration_hours
+                course_count += 1
+                days_teaching.add(assignment.start_time.date())
+
+        return {
+            "total_hours": total_hours,
+            "course_count": course_count,
+            "days_teaching": len(days_teaching),
+            "average_hours_per_day": total_hours / max(len(days_teaching), 1)
         }
