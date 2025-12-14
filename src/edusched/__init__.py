@@ -34,7 +34,7 @@ from edusched.solvers.base import SolverBackend
 from edusched.solvers.heuristic import HeuristicSolver
 
 # Main API
-from edusched.api import solve
+from edusched.core_api import solve
 
 # Error types
 from edusched.errors import (
