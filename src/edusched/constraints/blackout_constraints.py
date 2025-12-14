@@ -35,7 +35,7 @@ class BlackoutDateConstraint(Constraint):
         # Check if the resource is assigned to this assignment
         assigned_resources = assignment.assigned_resources
         resource_assigned = False
-        for resource_type, resource_ids in assigned_resources.items():
+        for _resource_type, resource_ids in assigned_resources.items():
             if self.resource_id in resource_ids:
                 resource_assigned = True
                 break

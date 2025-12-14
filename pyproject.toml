@@ -69,6 +69,8 @@ strict_equality = true
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+
+[tool.ruff.lint]
 select = [
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings
@@ -79,7 +81,10 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "B008",  # function call in argument defaults (needed for FastAPI Depends)
+    "B904",  # exception chaining (stylistic preference)
+    "C901",  # function too complex (some algorithms require complexity)
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["edusched"]

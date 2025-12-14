@@ -72,7 +72,7 @@ class DataImporter:
         """Import data from CSV file."""
         with open(file_path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            return [row for row in reader]
+            return list(reader)
 
     def _import_json(self, file_path: Path) -> List[Dict[str, Any]]:
         """Import data from JSON file."""

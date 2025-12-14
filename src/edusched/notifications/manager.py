@@ -232,7 +232,7 @@ class EmailNotificationProvider(NotificationProvider):
                 if message.details.get("html_body"):
                     mail.add_content(Content("text/html", message.details["html_body"]))
 
-                response = sg.client.mail.send.post(request_body=mail.get())
+                sg.client.mail.send.post(request_body=mail.get())
 
             return {"success": True, "recipients": len(recipients)}
 
@@ -632,7 +632,7 @@ class NotificationManager:
             ).time()
 
             return start_time <= current_time <= end_time
-        except:
+        except Exception:
             return False
 
     def _get_affected_recipients(self, change: Dict[str, Any]) -> List[str]:

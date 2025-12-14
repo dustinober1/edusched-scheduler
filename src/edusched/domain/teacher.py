@@ -203,7 +203,7 @@ class Teacher:
 
         # Check if the requested time overlaps with any preferred time slot
         # For now, simple check - could be enhanced with proper time parsing
-        for preferred_slot in day_times:
+        for _preferred_slot in day_times:
             # Simple string comparison for now
             # In production, you'd want proper time range checking
             return True  # Assume available if preferred times exist

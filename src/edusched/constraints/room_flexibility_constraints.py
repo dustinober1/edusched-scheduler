@@ -274,7 +274,6 @@ class RoomCapacityOptimizationConstraint(Constraint):
         if not request or not hasattr(request, "enrollment_count"):
             return None
 
-        enrollment = request.enrollment_count
 
         # This is a soft constraint that scores room efficiency
         # For now, just pass (the scorer will handle the optimization)

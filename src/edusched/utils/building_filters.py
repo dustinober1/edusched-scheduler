@@ -203,7 +203,7 @@ def calculate_building_utilization(
     building_resources = group_resources_by_building(resources, buildings)
 
     utilization = {}
-    for building_id, (building, bldg_resources) in building_resources.items():
+    for building_id, (_building, bldg_resources) in building_resources.items():
         total_capacity = sum(r.capacity or 0 for r in bldg_resources)
         if total_capacity == 0:
             utilization[building_id] = 0.0

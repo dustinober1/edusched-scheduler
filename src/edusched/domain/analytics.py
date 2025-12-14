@@ -445,7 +445,7 @@ class AnalyticsEngine:
             }
 
         # Include time slot analyses
-        time_analyses = [a for a in self.time_slot_analyses.values()]
+        time_analyses = list(self.time_slot_analyses.values())
         if time_analyses:
             summary["time_slot_analysis"] = {
                 "total_slots": len(time_analyses),

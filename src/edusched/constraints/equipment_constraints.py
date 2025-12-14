@@ -117,7 +117,7 @@ class EquipmentReservationConstraint(Constraint):
         # Get session time window
         session_start = assignment.start_time
         session_end = session_start + timedelta(minutes=float(request.duration))
-        session_id = str(assignment.id)
+        str(assignment.id)
         room_id = str(assignment.resource.id)
 
         # Check against other assignments
@@ -196,7 +196,7 @@ class EquipmentReservationConstraint(Constraint):
 
         # Check for conflicts in same room (can't share)
         if room1_id == room2_id:
-            for equipment_type, quantity in req1_map.items():
+            for equipment_type, _quantity in req1_map.items():
                 if equipment_type in req2_map:
                     # Equipment in same room can't be shared
                     conflicts.append(f"{equipment_type} (same room conflict)")

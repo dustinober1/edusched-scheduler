@@ -624,7 +624,7 @@ class FastIncrementalSolver(IncrementalSolver):
             request, occurrence_index, indices, context
         )
 
-        for start_time, end_time, priority_score in candidates:
+        for start_time, end_time, _priority_score in candidates:
             # Create tentative assignment
             assignment = Assignment(
                 request_id=request.id,

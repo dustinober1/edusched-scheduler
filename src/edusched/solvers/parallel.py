@@ -7,7 +7,7 @@ generation, and result merging for improved performance.
 import concurrent.futures
 import threading
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, List, Optional, Tuple
 
 from edusched.solvers.heuristic import HeuristicSolver

@@ -115,7 +115,7 @@ class ConflictDetector:
         conflicts = []
 
         # Run all detection patterns
-        for conflict_type, detector in self.conflict_patterns.items():
+        for _conflict_type, detector in self.conflict_patterns.items():
             detected = detector(assignments, context)
             conflicts.extend(detected)
 
@@ -503,7 +503,6 @@ class ConflictResolver:
                 priority = 5  # Medium
                 weight = 5.0
                 is_hard = False
-                can_relax = True
             else:
                 priority = 3  # Default medium-high
                 weight = 7.0

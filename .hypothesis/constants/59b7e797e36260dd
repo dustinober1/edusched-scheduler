@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/scoring/conflict_scorer.py
+# hypothesis_version: 6.148.7
+
+[0.0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 10.0, '\\bRoom\\d+[A-Z]*', '\\b\\d{5,10}\\b', '\\bprof_[a-z_]+', 'accessibility', 'capacity', 'capacity_exceeded', 'conflict', 'critical', 'critical_violations', 'double', 'double_book', 'equipment', 'equipment_missing', 'exceeds', 'hard', 'high_violations', 'holiday', 'holiday_violation', 'low_violations', 'medium_violations', 'missing', 'most_common_types', 'pattern', 'pattern_violation', 'preference', 'preference_violation', 'prerequisite', 'prerequisite_missing', 'resolution', 'resolutions', 'room', 'room_double_booking', 'soft', 'student', 'student_conflict', 'teacher', 'total_violations', 'wheelchair']

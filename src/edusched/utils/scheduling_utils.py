@@ -98,7 +98,7 @@ class OccurrenceSpreader:
 
         # Calculate target dates per week
         total_weeks = len(academic_weeks)
-        min_per_week = occurrences_needed // total_weeks
+        occurrences_needed // total_weeks
         extra_needed = occurrences_needed % total_weeks
 
         # Group candidate dates by week
@@ -109,8 +109,6 @@ class OccurrenceSpreader:
 
         selected_dates = []
         used_weeks: Set[int] = set()
-        consecutive_count = 0
-        last_used_week = -1
 
         # First pass: distribute minimum occurrences
         for week_idx in range(total_weeks):
@@ -142,7 +140,7 @@ class OccurrenceSpreader:
 
         # If we still don't have enough occurrences, fill from remaining candidates
         if len(selected_dates) < occurrences_needed:
-            remaining_needed = occurrences_needed - len(selected_dates)
+            occurrences_needed - len(selected_dates)
             for candidate_date in candidate_dates:
                 if candidate_date not in selected_dates:
                     selected_dates.append(candidate_date)

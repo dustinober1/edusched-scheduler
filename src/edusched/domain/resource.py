@@ -348,7 +348,10 @@ class Resource:
             elif key == "equipment" and isinstance(required_value, dict):
                 # Check equipment as a dict of type: count
                 for eq_type, count in required_value.items():
-                    if isinstance(count, (int, float)) and self.get_equipment_count(eq_type) < count:
+                    if (
+                        isinstance(count, (int, float))
+                        and self.get_equipment_count(eq_type) < count
+                    ):
                         return False
             elif key == "accessibility" and isinstance(required_value, dict):
                 # Check accessibility requirements

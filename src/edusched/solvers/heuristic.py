@@ -84,7 +84,7 @@ class HeuristicSolver(SolverBackend):
 
         # Try to schedule each request
         unscheduled = []
-        scheduled_requests: Set[str] = set(a.request_id for a in solution)
+        scheduled_requests: Set[str] = {a.request_id for a in solution}
 
         # Sort requests by priority using new priority system (longer classes first)
         requests_to_schedule = [r for r in problem.requests if r.id not in scheduled_requests]

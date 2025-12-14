@@ -138,7 +138,7 @@ class Problem:
             time_occupancy_maps[resource.id] = set()
 
         for assignment in self.locked_assignments:
-            for resource_type, resource_ids in assignment.assigned_resources.items():
+            for _resource_type, resource_ids in assignment.assigned_resources.items():
                 for resource_id in resource_ids:
                     if resource_id in time_occupancy_maps:
                         time_occupancy_maps[resource_id].add(
@@ -151,7 +151,7 @@ class Problem:
             locked_intervals[resource.id] = set()
 
         for assignment in self.locked_assignments:
-            for resource_type, resource_ids in assignment.assigned_resources.items():
+            for _resource_type, resource_ids in assignment.assigned_resources.items():
                 for resource_id in resource_ids:
                     if resource_id in locked_intervals:
                         locked_intervals[resource_id].add(

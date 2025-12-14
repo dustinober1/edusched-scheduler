@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, List, Optional
 
 try:
     from ortools.sat.python import cp_model
-    from ortools.util.python import solve_stats
 
     ORTOOLS_AVAILABLE = True
 except ImportError:
@@ -148,7 +147,7 @@ class ORToolsSolver:
                     # Calculate possible start times
                     possible_starts = self._get_possible_start_times(problem, request, resource)
 
-                    for start_idx, start_time in enumerate(possible_starts):
+                    for start_idx, _start_time in enumerate(possible_starts):
                         var_name = f"assign_{req_idx}_{res_idx}_{start_idx}"
                         assignments[(req_idx, res_idx, start_idx)] = self.model.NewBoolVar(var_name)
 
@@ -181,7 +180,7 @@ class ORToolsSolver:
 
     def _add_request_constraints(self, problem: "Problem", assignments):
         """Ensure each request is scheduled exactly once."""
-        for req_idx, request in enumerate(problem.requests):
+        for req_idx, _request in enumerate(problem.requests):
             # Collect all variables for this request
             request_vars = [var for (r_idx, _, _), var in assignments.items() if r_idx == req_idx]
 
@@ -210,7 +209,7 @@ class ORToolsSolver:
             resource_assignments[res_idx].append((start_time, end_time, var))
 
         # Add no-overlap constraints for each resource
-        for res_idx, slot_assignments in resource_assignments.items():
+        for _res_idx, slot_assignments in resource_assignments.items():
             # Sort assignments by start time
             slot_assignments.sort(key=lambda x: x[0])
 
@@ -238,7 +237,7 @@ class ORToolsSolver:
 
     def _add_capacity_constraints(self, problem: "Problem", assignments):
         """Add room capacity constraints."""
-        for (req_idx, res_idx, start_idx), var in assignments.items():
+        for (req_idx, res_idx, _start_idx), var in assignments.items():
             request = problem.requests[req_idx]
             resource = problem.resources[res_idx]
 

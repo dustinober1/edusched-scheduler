@@ -145,7 +145,6 @@ async def get_conflict_summary(
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Detect conflicts
-    conflicts = []
 
     # Check all conflict types
     resource_conflicts = _check_resource_conflicts(schedule.assignments)

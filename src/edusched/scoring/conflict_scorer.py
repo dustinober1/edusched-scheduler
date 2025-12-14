@@ -204,7 +204,7 @@ class ConflictScorer:
 
     def _suggest_resolution(self, violation: Violation) -> Optional[str]:
         """Suggest a resolution for the violation."""
-        constraint_type = violation.constraint_type.lower()
+        violation.constraint_type.lower()
         message = violation.message.lower()
 
         if "double" in message and ("room" in message or "teacher" in message):

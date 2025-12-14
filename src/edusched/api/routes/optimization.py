@@ -27,7 +27,7 @@ running_optimizations: Dict[str, Dict] = {}
 async def optimize_schedule(
     schedule_id: str,
     background_tasks: BackgroundTasks,
-    objectives: List[str] = ["spread_evenly"],
+    objectives: List[str] = None,
     max_iterations: int = 1000,
     time_limit: int = 300,
     current_user: User = Depends(get_active_user),
@@ -47,6 +47,8 @@ async def optimize_schedule(
         Optimization job ID
     """
     # Get schedule
+    if objectives is None:
+        objectives = ["spread_evenly"]
     schedule = db.get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -314,7 +316,7 @@ async def compare_optimizations(
     schedule_id: str,
     algorithm1: str = "heuristic",
     algorithm2: str = "ortools",
-    objectives: List[str] = ["spread_evenly"],
+    objectives: List[str] = None,
     current_user: User = Depends(get_active_user),
 ):
     """
@@ -331,6 +333,8 @@ async def compare_optimizations(
         Comparison results
     """
     # Get schedule
+    if objectives is None:
+        objectives = ["spread_evenly"]
     schedule = db.get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -390,7 +394,7 @@ async def run_optimization(
             return
 
         # Create problem from schedule
-        problem = Problem(
+        Problem(
             requests=[],
             resources=[],
             calendars=[],

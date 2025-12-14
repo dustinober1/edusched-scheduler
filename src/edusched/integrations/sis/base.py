@@ -496,13 +496,11 @@ class SISManager:
         students = provider.get_students({"term": term})
         courses = provider.get_courses({"term": term})
         sections = provider.get_term_schedule(term)
-        instructors = provider.get_instructors()
+        provider.get_instructors()
         enrollments = provider.get_enrollments({"term": term})
 
         # Convert to EduSched format
         edu_requests = []
-        edu_resources = []
-        edu_constraints = []
 
         # Convert sections to requests
         for section in sections:

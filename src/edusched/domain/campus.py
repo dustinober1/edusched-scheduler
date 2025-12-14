@@ -340,7 +340,7 @@ class CampusManager:
 
     def get_campus_timezones(self) -> Set[str]:
         """Get all unique timezones across campuses."""
-        return set(campus.timezone for campus in self.campuses.values())
+        return {campus.timezone for campus in self.campuses.values()}
 
     def validate_cross_campus_schedule(
         self,

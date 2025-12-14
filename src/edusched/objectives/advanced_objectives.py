@@ -38,7 +38,7 @@ class MinimizeGapsBetweenClasses(Objective):
         entity_assignments = self._group_assignments_by_entity(problem, solution)
 
         # Calculate gaps for each entity
-        for entity_id, assignments in entity_assignments.items():
+        for _entity_id, assignments in entity_assignments.items():
             # Sort by start time
             assignments.sort(key=lambda a: a.start_time)
 
@@ -233,7 +233,7 @@ class BreakTimeRequirements(Objective):
         # Group assignments by entity
         entity_assignments = self._group_assignments_by_entity(problem, solution)
 
-        for entity_id, assignments in entity_assignments.items():
+        for _entity_id, assignments in entity_assignments.items():
             # Sort by start time
             assignments.sort(key=lambda a: a.start_time)
 
@@ -304,7 +304,7 @@ class WalkingDistanceMinimizer(Objective):
         # Group assignments by student
         student_assignments = self._group_by_students(problem, solution)
 
-        for student_id, assignments in student_assignments.items():
+        for _student_id, assignments in student_assignments.items():
             # Sort by start time
             assignments.sort(key=lambda a: a.start_time)
 
@@ -571,7 +571,7 @@ class EnergyEfficiencyOptimizer(Objective):
             return 1.0
 
         # Fewer active buildings = better efficiency
-        total_time_blocks = len(set(tb for blocks in building_usage.values() for tb in blocks))
+        total_time_blocks = len({tb for blocks in building_usage.values() for tb in blocks})
         avg_blocks_per_building = sum(len(blocks) for blocks in building_usage.values()) / len(
             building_usage
         )

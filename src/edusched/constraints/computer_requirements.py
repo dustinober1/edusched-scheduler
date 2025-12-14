@@ -34,7 +34,7 @@ class ComputerRequirements(Constraint):
             return None
 
         # Check assigned rooms
-        for resource_type, resource_ids in assignment.assigned_resources.items():
+        for _resource_type, resource_ids in assignment.assigned_resources.items():
             for resource_id in resource_ids:
                 resource = context.resource_lookup.get(resource_id)
                 if not resource:
@@ -156,7 +156,7 @@ class AnyComputerAvailable(Constraint):
             return None
 
         # Check if this assignment is in a room with sufficient computers
-        for resource_type, resource_ids in assignment.assigned_resources.items():
+        for _resource_type, resource_ids in assignment.assigned_resources.items():
             for resource_id in resource_ids:
                 resource = context.resource_lookup.get(resource_id)
                 if resource and resource.attributes.get("computers"):
@@ -197,7 +197,7 @@ class NoComputerRoom(Constraint):
         if assignment.request_id != self.request_id:
             return None
 
-        for resource_type, resource_ids in assignment.assigned_resources.items():
+        for _resource_type, resource_ids in assignment.assigned_resources.items():
             for resource_id in resource_ids:
                 resource = context.resource_lookup.get(resource_id)
                 if resource and resource.attributes.get("computers"):

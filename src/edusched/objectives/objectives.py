@@ -104,7 +104,7 @@ class BalanceInstructorLoad(Objective):
         # Calculate variance
         loads = list(instructor_loads.values())
         mean = sum(loads) / len(loads)
-        variance = sum((l - mean) ** 2 for l in loads) / len(loads)
+        variance = sum((load - mean) ** 2 for load in loads) / len(loads)
 
         # Normalize: lower variance = higher score
         max_variance = (len(solution) ** 2) / len(instructor_loads)
