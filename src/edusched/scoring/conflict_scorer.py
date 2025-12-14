@@ -1,24 +1,25 @@
 """Conflict scoring and priority system for scheduling constraints."""
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Set
-from datetime import datetime, timedelta
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 from edusched.constraints.base import Violation
 
 
 class ConstraintPriority(Enum):
     """Priority levels for constraints."""
-    CRITICAL = 5     # Cannot violate (e.g., room double-booking)
-    HIGH = 4         # Very important to satisfy
-    MEDIUM = 3       # Important but flexible
-    LOW = 2          # Nice to have
+
+    CRITICAL = 5  # Cannot violate (e.g., room double-booking)
+    HIGH = 4  # Very important to satisfy
+    MEDIUM = 3  # Important but flexible
+    LOW = 2  # Nice to have
     INFORMATIONAL = 1  # For reporting only
 
 
 class ConflictType(Enum):
     """Types of scheduling conflicts."""
+
     ROOM_DOUBLE_BOOKING = "room_double_booking"
     TEACHER_DOUBLE_BOOKING = "teacher_double_booking"
     STUDENT_CONFLICT = "student_conflict"
@@ -34,6 +35,7 @@ class ConflictType(Enum):
 @dataclass
 class ConflictScore:
     """Represents a scored conflict with weight and impact."""
+
     violation: Violation
     priority: ConstraintPriority
     impact_score: float  # 0.0 to 1.0, how severe the conflict is
@@ -66,9 +68,7 @@ class ConflictScorer:
         }
 
     def score_conflicts(
-        self,
-        violations: List[Violation],
-        context=None
+        self, violations: List[Violation], context=None
     ) -> Tuple[float, List[ConflictScore]]:
         """
         Score a list of violations.
@@ -87,18 +87,11 @@ class ConflictScorer:
             detailed_scores.append(score)
 
         # Calculate total weighted score
-        total_score = sum(
-            score.priority.value * score.impact_score
-            for score in detailed_scores
-        )
+        total_score = sum(score.priority.value * score.impact_score for score in detailed_scores)
 
         return total_score, detailed_scores
 
-    def _score_single_violation(
-        self,
-        violation: Violation,
-        context=None
-    ) -> ConflictScore:
+    def _score_single_violation(self, violation: Violation, context=None) -> ConflictScore:
         """Score a single violation."""
         # Determine constraint type and priority
         priority = self._get_constraint_priority(violation)
@@ -115,7 +108,7 @@ class ConflictScorer:
             priority=priority,
             impact_score=impact_score,
             affected_parties=affected_parties,
-            suggested_resolution=suggested_resolution
+            suggested_resolution=suggested_resolution,
         )
 
     def _get_constraint_priority(self, violation: Violation) -> ConstraintPriority:
@@ -193,9 +186,9 @@ class ConflictScorer:
         # Extract various ID patterns
         id_patterns = [
             r"\b[A-Z]{2,4}\d{2,4}\b",  # Course IDs like CS401
-            r"\bprof_[a-z_]+",          # Teacher IDs
-            r"\bRoom\d+[A-Z]*",          # Room IDs
-            r"\b\d{5,10}\b",              # Student IDs
+            r"\bprof_[a-z_]+",  # Teacher IDs
+            r"\bRoom\d+[A-Z]*",  # Room IDs
+            r"\b\d{5,10}\b",  # Student IDs
         ]
 
         for pattern in id_patterns:
@@ -241,28 +234,20 @@ class ConflictScorer:
         return "Review constraint and adjust scheduling accordingly"
 
     def rank_violations(
-        self,
-        violations: List[Violation],
-        max_to_resolve: int = None
+        self, violations: List[Violation], max_to_resolve: int = None
     ) -> List[ConflictScore]:
         """Rank violations by priority and impact."""
         _, detailed_scores = self.score_conflicts(violations)
 
         # Sort by priority (descending) then impact (descending)
-        detailed_scores.sort(
-            key=lambda s: (s.priority.value, s.impact_score),
-            reverse=True
-        )
+        detailed_scores.sort(key=lambda s: (s.priority.value, s.impact_score), reverse=True)
 
         if max_to_resolve:
             return detailed_scores[:max_to_resolve]
 
         return detailed_scores
 
-    def get_conflict_summary(
-        self,
-        detailed_scores: List[ConflictScore]
-    ) -> Dict[str, any]:
+    def get_conflict_summary(self, detailed_scores: List[ConflictScore]) -> Dict[str, any]:
         """Generate a summary of conflicts."""
         summary = {
             "total_violations": len(detailed_scores),
@@ -272,7 +257,7 @@ class ConflictScorer:
             "low_violations": 0,
             "most_common_types": {},
             "total_impacted_parties": set(),
-            "resolutions": []
+            "resolutions": [],
         }
 
         for score in detailed_scores:
@@ -291,19 +276,16 @@ class ConflictScorer:
 
             # Collect resolutions
             if score.suggested_resolution:
-                summary["resolutions"].append({
-                    "conflict": score.violation.message,
-                    "resolution": score.suggested_resolution
-                })
+                summary["resolutions"].append(
+                    {"conflict": score.violation.message, "resolution": score.suggested_resolution}
+                )
 
         summary["total_impacted_parties"] = len(summary["total_impacted_parties"])
 
         return summary
 
     def calculate_schedule_quality(
-        self,
-        violations: List[Violation],
-        total_assignments: int
+        self, violations: List[Violation], total_assignments: int
     ) -> float:
         """
         Calculate overall schedule quality score (0.0 to 1.0).

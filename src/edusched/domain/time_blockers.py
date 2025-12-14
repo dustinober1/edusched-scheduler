@@ -1,7 +1,7 @@
 """Time blockers for institutional scheduling constraints."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from typing import List, Optional, Tuple
 
 
@@ -11,10 +11,10 @@ class TimeBlock:
 
     name: str  # e.g., "Lunch Break", "All-Hands Meeting", "Common Exam"
     start_time: time  # Start time of the block (HH:MM)
-    end_time: time    # End time of the block (HH:MM)
+    end_time: time  # End time of the block (HH:MM)
     days_of_week: List[int]  # Days when block applies [0=Monday, ..., 6=Sunday]
     start_date: Optional[datetime] = None  # When block starts being active (None = always active)
-    end_date: Optional[datetime] = None    # When block ends being active (None = always active)
+    end_date: Optional[datetime] = None  # When block ends being active (None = always active)
     description: Optional[str] = None
 
     def is_active(self, check_date: datetime) -> bool:
@@ -61,11 +61,11 @@ class TimeBlocker:
         self,
         name: str,
         start_time: str,  # "HH:MM"
-        end_time: str,    # "HH:MM"
+        end_time: str,  # "HH:MM"
         days: List[int],  # [0, 1, 2, 3, 4] for Mon-Fri
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
     ) -> None:
         """Add a time block using string time format."""
         start = time.fromisoformat(start_time)
@@ -78,7 +78,7 @@ class TimeBlocker:
             days_of_week=days,
             start_date=start_date,
             end_date=end_date,
-            description=description
+            description=description,
         )
         self.add_block(block)
 
@@ -98,7 +98,7 @@ class TimeBlocker:
         self,
         day_date: datetime,
         day_start: time = time(8, 0),  # 8:00 AM
-        day_end: time = time(22, 0)    # 10:00 PM
+        day_end: time = time(22, 0),  # 10:00 PM
     ) -> List[Tuple[time, time]]:
         """
         Get available time slots on a specific day, excluding blocked times.
@@ -149,7 +149,7 @@ def create_standard_time_blocker(institution_id: str) -> TimeBlocker:
         start_time="11:30",
         end_time="13:30",
         days=[0, 1, 2, 3, 4],  # Monday-Friday
-        description="Common lunch period - no classes scheduled"
+        description="Common lunch period - no classes scheduled",
     )
 
     # Department meetings (Wednesday 3:00-4:30 PM)
@@ -158,7 +158,7 @@ def create_standard_time_blocker(institution_id: str) -> TimeBlocker:
         start_time="15:00",
         end_time="16:30",
         days=[2],  # Wednesday
-        description="Weekly department meetings"
+        description="Weekly department meetings",
     )
 
     # All-hands meetings (First Monday of month 2:00-3:00 PM)
@@ -168,28 +168,32 @@ def create_standard_time_blocker(institution_id: str) -> TimeBlocker:
         start_time="14:00",
         end_time="15:00",
         days=[0],  # Monday
-        description="Monthly all-hands meeting"
+        description="Monthly all-hands meeting",
     )
 
     # Common exam periods (Finals week - 9 AM to 5 PM blocks)
     # These would be activated during specific date ranges
-    blocker.add_block(TimeBlock(
-        name="Final Exam Period - Morning",
-        start_time=time(9, 0),
-        end_time=time(12, 0),
-        days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
-        # start_date and end_date would be set when creating academic calendar
-        description="Final exam morning slots"
-    ))
+    blocker.add_block(
+        TimeBlock(
+            name="Final Exam Period - Morning",
+            start_time=time(9, 0),
+            end_time=time(12, 0),
+            days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
+            # start_date and end_date would be set when creating academic calendar
+            description="Final exam morning slots",
+        )
+    )
 
-    blocker.add_block(TimeBlock(
-        name="Final Exam Period - Afternoon",
-        start_time=time(13, 0),
-        end_time=time(17, 0),
-        days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
-        # start_date and end_date would be set when creating academic calendar
-        description="Final exam afternoon slots"
-    ))
+    blocker.add_block(
+        TimeBlock(
+            name="Final Exam Period - Afternoon",
+            start_time=time(13, 0),
+            end_time=time(17, 0),
+            days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
+            # start_date and end_date would be set when creating academic calendar
+            description="Final exam afternoon slots",
+        )
+    )
 
     # Break between classes (common 10-minute passing periods)
     # Note: This would be implemented differently - as a constraint rather than a blocker
@@ -216,7 +220,7 @@ def create_research_university_blocker(institution_id: str) -> TimeBlocker:
         start_time="16:00",
         end_time="17:30",
         days=[3],  # Thursday
-        description="Weekly research seminar series"
+        description="Weekly research seminar series",
     )
 
     # Faculty research time (Tuesday afternoons)
@@ -225,7 +229,7 @@ def create_research_university_blocker(institution_id: str) -> TimeBlocker:
         start_time="13:00",
         end_time="17:00",
         days=[1],  # Tuesday
-        description="Protected faculty research time"
+        description="Protected faculty research time",
     )
 
     # Graduate student defenses (Friday 10 AM-12 PM)
@@ -234,7 +238,7 @@ def create_research_university_blocker(institution_id: str) -> TimeBlocker:
         start_time="10:00",
         end_time="12:00",
         days=[4],  # Friday
-        description="Thesis and dissertation defense times"
+        description="Thesis and dissertation defense times",
     )
 
     return blocker
@@ -258,17 +262,19 @@ def create_community_college_blocker(institution_id: str) -> TimeBlocker:
         start_time="12:00",
         end_time="13:00",
         days=[0, 1, 2, 3, 4],  # Monday-Friday
-        description="One-hour lunch break"
+        description="One-hour lunch break",
     )
 
     # Registration periods (first week of semester)
-    blocker.add_block(TimeBlock(
-        name="Registration Period",
-        start_time=time(9, 0),
-        end_time=time(17, 0),
-        days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
-        description="Student registration and advising"
-    ))
+    blocker.add_block(
+        TimeBlock(
+            name="Registration Period",
+            start_time=time(9, 0),
+            end_time=time(17, 0),
+            days_of_week=[0, 1, 2, 3, 4],  # Mon-Fri
+            description="Student registration and advising",
+        )
+    )
 
     # Evening adult education setup time (5:00-6:00 PM)
     blocker.add_daily_block(
@@ -276,7 +282,7 @@ def create_community_college_blocker(institution_id: str) -> TimeBlocker:
         start_time="17:00",
         end_time="18:00",
         days=[0, 1, 2, 3, 4],  # Monday-Friday
-        description="Setup time for evening classes"
+        description="Setup time for evening classes",
     )
 
     return blocker

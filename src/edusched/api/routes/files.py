@@ -2,16 +2,15 @@
 
 import json
 import tempfile
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from edusched.api.database import db
 from edusched.api.dependencies import get_active_user
-from edusched.api.events import emit_data_imported, emit_data_exported
+from edusched.api.events import emit_data_exported, emit_data_imported
 from edusched.api.models import BulkImportResponse, User
 from edusched.utils.data_import import DataImporter, DataImportError
 
@@ -156,11 +155,13 @@ async def upload_multiple_files(
             data_type = "time_blockers"
         else:
             # Skip unknown file types
-            results.append({
-                "filename": file.filename,
-                "status": "skipped",
-                "message": "Could not determine data type from filename",
-            })
+            results.append(
+                {
+                    "filename": file.filename,
+                    "status": "skipped",
+                    "message": "Could not determine data type from filename",
+                }
+            )
             continue
 
         try:
@@ -187,22 +188,26 @@ async def upload_multiple_files(
             elif data_type == "time_blockers":
                 records = len(importer.import_time_blockers(tmp_path))
 
-            results.append({
-                "filename": file.filename,
-                "data_type": data_type,
-                "status": "success",
-                "records_imported": records,
-            })
+            results.append(
+                {
+                    "filename": file.filename,
+                    "data_type": data_type,
+                    "status": "success",
+                    "records_imported": records,
+                }
+            )
             total_imported += records
 
             tmp_path.unlink(missing_ok=True)
 
         except Exception as e:
-            results.append({
-                "filename": file.filename,
-                "status": "error",
-                "message": str(e),
-            })
+            results.append(
+                {
+                    "filename": file.filename,
+                    "status": "error",
+                    "message": str(e),
+                }
+            )
             total_errors += 1
             tmp_path.unlink(missing_ok=True)
 
@@ -252,6 +257,7 @@ async def download_template(
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
         from edusched.utils.data_import import create_sample_csv_files
+
         create_sample_csv_files(tmp_path)
 
         # Get appropriate template file
@@ -344,17 +350,19 @@ async def export_schedule_package(
         # Create package
         if format == "zip":
             import zipfile
+
             package_file = export_path / f"{schedule.name.replace(' ', '_')}_package.zip"
-            with zipfile.ZipFile(package_file, 'w') as zipf:
+            with zipfile.ZipFile(package_file, "w") as zipf:
                 for file_path in export_path.glob("*"):
                     if file_path.is_file() and file_path != package_file:
                         zipf.write(file_path, file_path.name)
 
         elif format == "tar":
             import tarfile
+
             package_file = export_path / f"{schedule.name.replace(' ', '_')}_package.tar.gz"
-            with tarfile.open(package_file, 'w:gz') as tar:
-                tar.add(export_path, arcname=schedule.name.replace(' ', '_'))
+            with tarfile.open(package_file, "w:gz") as tar:
+                tar.add(export_path, arcname=schedule.name.replace(" ", "_"))
 
         # Emit export event
         await emit_data_exported(
@@ -396,8 +404,7 @@ async def get_import_history(
         Import history
     """
     # Get import events from event manager
-    from edusched.api.events import event_manager
-    from edusched.api.events import EventType
+    from edusched.api.events import EventType, event_manager
 
     events = event_manager.get_event_history(
         event_type=EventType.DATA_IMPORTED,
@@ -427,8 +434,7 @@ async def get_export_history(
         Export history
     """
     # Get export events from event manager
-    from edusched.api.events import event_manager
-    from edusched.api.events import EventType
+    from edusched.api.events import EventType, event_manager
 
     events = event_manager.get_event_history(
         event_type=EventType.DATA_EXPORTED,

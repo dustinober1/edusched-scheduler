@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 if TYPE_CHECKING:
     from edusched.constraints.base import Constraint
     from edusched.domain.assignment import Assignment
+    from edusched.domain.building import Building
     from edusched.domain.calendar import Calendar
+    from edusched.domain.department import Department
+    from edusched.domain.holiday_calendar import HolidayCalendar
     from edusched.domain.resource import Resource
     from edusched.domain.session_request import SessionRequest
-    from edusched.domain.building import Building
-    from edusched.domain.department import Department
     from edusched.domain.teacher import Teacher
-    from edusched.domain.holiday_calendar import HolidayCalendar
     from edusched.objectives.base import Objective
 
 
@@ -129,9 +129,7 @@ class Problem:
         qualified_resources: Dict[str, List[str]] = {}
         for request in self.requests:
             qualified_resources[request.id] = [
-                r.id
-                for r in self.resources
-                if r.can_satisfy(request.required_attributes)
+                r.id for r in self.resources if r.can_satisfy(request.required_attributes)
             ]
 
         # Build time occupancy maps from locked assignments

@@ -2,14 +2,15 @@
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 from edusched.domain.resource import BlackoutPeriod
 
 
 class BuildingType(Enum):
     """Types of buildings on campus."""
+
     ACADEMIC = "academic"
     LIBRARY = "library"
     LAB = "lab"
@@ -23,6 +24,7 @@ class BuildingType(Enum):
 @dataclass
 class Floor:
     """Represents a floor in a building with rooms."""
+
     number: int  # Floor number (0 for ground floor, -1 for basement, etc.)
     rooms: List[str] = field(default_factory=list)  # List of room IDs on this floor
 
@@ -88,7 +90,7 @@ class Building:
                 return floor_number
         return None
 
-    def calculate_distance_to(self, other_building: 'Building') -> Optional[float]:
+    def calculate_distance_to(self, other_building: "Building") -> Optional[float]:
         """Calculate distance to another building using coordinates."""
         if not self.coordinates or not other_building.coordinates:
             return None
@@ -100,7 +102,7 @@ class Building:
         # In practice, you might use Haversine formula for Earth coordinates
         return ((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2) ** 0.5
 
-    def is_same_building(self, other_building: 'Building') -> bool:
+    def is_same_building(self, other_building: "Building") -> bool:
         """Check if this is the same building."""
         return self.id == other_building.id
 
@@ -109,10 +111,13 @@ class Building:
         self.blackout_periods.append(blackout)
         self.blackout_periods.sort(key=lambda b: b.start_date)
 
-    def get_blackout_periods_in_range(self, start_date: date, end_date: date) -> List[BlackoutPeriod]:
+    def get_blackout_periods_in_range(
+        self, start_date: date, end_date: date
+    ) -> List[BlackoutPeriod]:
         """Get all building blackout periods within a date range."""
         return [
-            blackout for blackout in self.blackout_periods
+            blackout
+            for blackout in self.blackout_periods
             if blackout.start_date <= end_date and blackout.end_date >= start_date
         ]
 

@@ -1,22 +1,20 @@
 """Enhanced schedule management API routes with persistence and real-time updates."""
 
-import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from edusched.core_api import solve
 from edusched.api.database import db
 from edusched.api.dependencies import get_active_user
 from edusched.api.events import (
     emit_schedule_created,
     emit_schedule_updated,
-    emit_solver_started,
     emit_solver_completed,
     emit_solver_failed,
+    emit_solver_started,
 )
 from edusched.api.models import (
     AssignmentModel,
@@ -24,9 +22,10 @@ from edusched.api.models import (
     ScheduleResponse,
     User,
 )
+from edusched.core_api import solve
 from edusched.domain.problem import Problem
 from edusched.domain.result import Result
-from edusched.utils.export import export_schedule, get_supported_formats, get_format_extensions
+from edusched.utils.export import get_format_extensions, get_supported_formats
 
 router = APIRouter()
 
@@ -86,12 +85,12 @@ async def create_schedule(
                     resource_id=str(assignment.resource.id),
                     start_time=assignment.start_time.isoformat(),
                     end_time=assignment.end_time.isoformat(),
-                    course_code=getattr(assignment.request, 'course_code', None),
-                    teacher_name=getattr(assignment.request, 'teacher_name', None),
-                    room_name=getattr(assignment.resource, 'name', None),
-                    building_id=getattr(assignment.resource, 'building_id', None),
-                    enrollment=getattr(assignment.request, 'enrollment', None),
-                    capacity=getattr(assignment.resource, 'capacity', None),
+                    course_code=getattr(assignment.request, "course_code", None),
+                    teacher_name=getattr(assignment.request, "teacher_name", None),
+                    room_name=getattr(assignment.resource, "name", None),
+                    building_id=getattr(assignment.resource, "building_id", None),
+                    enrollment=getattr(assignment.request, "enrollment", None),
+                    capacity=getattr(assignment.resource, "capacity", None),
                 )
             )
 
@@ -139,7 +138,7 @@ async def create_schedule(
             status="success" if assignments else "no_solution",
             total_assignments=len(assignments),
             solver_time_ms=result.solver_time_ms,
-            iterations=getattr(result, 'iterations', 0),
+            iterations=getattr(result, "iterations", 0),
             assignments=assignments,
         )
 
@@ -185,9 +184,7 @@ async def get_schedule(
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Convert assignments
-    assignments = [
-        AssignmentModel(**a) for a in schedule.assignments
-    ]
+    assignments = [AssignmentModel(**a) for a in schedule.assignments]
 
     return {
         "id": schedule.id,
@@ -345,7 +342,12 @@ async def export_schedule_endpoint(
 
     try:
         # Export using the data directly
-        from edusched.utils.export import export_to_json, export_to_csv, export_to_ical, export_to_excel
+        from edusched.utils.export import (
+            export_to_csv,
+            export_to_excel,
+            export_to_ical,
+            export_to_json,
+        )
 
         if format == "json":
             export_to_json(result, export_path)
@@ -412,15 +414,17 @@ async def list_schedules(
     # Convert to response format
     schedule_list = []
     for schedule in schedules:
-        schedule_list.append({
-            "id": schedule.id,
-            "name": schedule.name,
-            "status": schedule.status,
-            "created_at": schedule.created_at.isoformat(),
-            "updated_at": schedule.updated_at.isoformat(),
-            "total_assignments": len(schedule.assignments),
-            "metadata": schedule.metadata,
-        })
+        schedule_list.append(
+            {
+                "id": schedule.id,
+                "name": schedule.name,
+                "status": schedule.status,
+                "created_at": schedule.created_at.isoformat(),
+                "updated_at": schedule.updated_at.isoformat(),
+                "total_assignments": len(schedule.assignments),
+                "metadata": schedule.metadata,
+            }
+        )
 
     return {
         "schedules": schedule_list,
@@ -448,7 +452,8 @@ async def get_schedule_stats(current_user: User = Depends(get_active_user)):
 
     # Calculate average solver time
     solver_times = [
-        s.metadata.get("solver_time_ms", 0) for s in user_schedules
+        s.metadata.get("solver_time_ms", 0)
+        for s in user_schedules
         if "solver_time_ms" in s.metadata
     ]
     avg_solver_time = sum(solver_times) / len(solver_times) if solver_times else 0
@@ -466,8 +471,7 @@ async def get_schedule_stats(current_user: User = Depends(get_active_user)):
         "avg_solver_time_ms": avg_solver_time,
         "status_distribution": status_counts,
         "last_updated": max(
-            (s.updated_at for s in user_schedules),
-            default=datetime.now()
+            (s.updated_at for s in user_schedules), default=datetime.now()
         ).isoformat(),
     }
 
@@ -520,9 +524,7 @@ async def duplicate_schedule(
         name = f"{original.name} (Copy)"
 
     # Convert assignments
-    assignments = [
-        AssignmentModel(**a) for a in original.assignments
-    ]
+    assignments = [AssignmentModel(**a) for a in original.assignments]
 
     # Create new schedule
     new_schedule_id = db.create_schedule(

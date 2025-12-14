@@ -1,17 +1,17 @@
 """Constraints for managing resource proximity and building relationships."""
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 from enum import Enum
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
 if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
-    from edusched.domain.building import Building
 
 
 class ProximityType(Enum):
     """Types of proximity requirements."""
+
     SAME_BUILDING = "same_building"
     SAME_FLOOR = "same_floor"
     NEARBY_FLOOR = "nearby_floor"  # Within X floors
@@ -65,7 +65,8 @@ class ProximityConstraint(Constraint):
 
         # Check all related assignments for the same request
         related_assignments = [
-            a for a in solution
+            a
+            for a in solution
             if a.request_id == self.request_id and a.occurrence_index == assignment.occurrence_index
         ]
 
@@ -115,30 +116,31 @@ class ProximityConstraint(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=related_resource.id,
-                    message=f"Resource {related_resource.id} must be in same building as {primary_resource.id}"
+                    message=f"Resource {related_resource.id} must be in same building as {primary_resource.id}",
                 )
 
         elif self.proximity_type == ProximityType.SAME_FLOOR:
-            if (primary_building.id != related_building.id or
-                primary_resource.floor_number != related_resource.floor_number):
+            if (
+                primary_building.id != related_building.id
+                or primary_resource.floor_number != related_resource.floor_number
+            ):
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=related_resource.id,
-                    message=f"Resource {related_resource.id} must be on same floor as {primary_resource.id}"
+                    message=f"Resource {related_resource.id} must be on same floor as {primary_resource.id}",
                 )
 
         elif self.proximity_type == ProximityType.NEARBY_FLOOR:
             floors_between = primary_building.get_floors_between(
-                primary_resource.floor_number or 0,
-                related_resource.floor_number or 0
+                primary_resource.floor_number or 0, related_resource.floor_number or 0
             )
             if floors_between > self.max_floors:
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=related_resource.id,
-                    message=f"Resource {related_resource.id} must be within {self.max_floors} floors of {primary_resource.id}"
+                    message=f"Resource {related_resource.id} must be within {self.max_floors} floors of {primary_resource.id}",
                 )
 
         elif self.proximity_type == ProximityType.MAX_DISTANCE:
@@ -148,17 +150,19 @@ class ProximityConstraint(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=related_resource.id,
-                    message=f"Resource {related_resource.id} is too far from {primary_resource.id} ({distance:.2f} > {self.max_distance})"
+                    message=f"Resource {related_resource.id} is too far from {primary_resource.id} ({distance:.2f} > {self.max_distance})",
                 )
 
         elif self.proximity_type == ProximityType.CAMPUS_AREA:
-            if (primary_building.campus_area != related_building.campus_area or
-                primary_building.campus_area != self.campus_area):
+            if (
+                primary_building.campus_area != related_building.campus_area
+                or primary_building.campus_area != self.campus_area
+            ):
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=related_resource.id,
-                    message=f"Resource {related_resource.id} must be in {self.campus_area or 'same campus area'} as {primary_resource.id}"
+                    message=f"Resource {related_resource.id} must be in {self.campus_area or 'same campus area'} as {primary_resource.id}",
                 )
 
         return None
@@ -180,7 +184,9 @@ class MultiRoomCoordination(Constraint):
         self,
         request_id: str,
         required_rooms: Dict[str, List[str]],  # e.g., {"classroom": 1, "breakout": 2}
-        proximity_requirements: Optional[List[Tuple[str, str, ProximityType]]] = None,  # [("classroom", "breakout", ProximityType.SAME_FLOOR)]
+        proximity_requirements: Optional[
+            List[Tuple[str, str, ProximityType]]
+        ] = None,  # [("classroom", "breakout", ProximityType.SAME_FLOOR)]
     ):
         self.request_id = request_id
         self.required_rooms = required_rooms
@@ -198,7 +204,8 @@ class MultiRoomCoordination(Constraint):
 
         # Collect all room assignments for this request occurrence
         all_room_assignments = [
-            a for a in solution
+            a
+            for a in solution
             if a.request_id == self.request_id and a.occurrence_index == assignment.occurrence_index
         ]
 
@@ -215,7 +222,7 @@ class MultiRoomCoordination(Constraint):
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
-                    message=f"Need {required_count} {room_type}(s), only have {actual_count}"
+                    message=f"Need {required_count} {room_type}(s), only have {actual_count}",
                 )
 
         # Check proximity requirements between room types
@@ -230,10 +237,7 @@ class MultiRoomCoordination(Constraint):
                     if room1 and room2:
                         # Create a temporary proximity constraint to check
                         temp_constraint = ProximityConstraint(
-                            self.request_id,
-                            room_type1,
-                            [room_type2],
-                            proximity_type
+                            self.request_id, room_type1, [room_type2], proximity_type
                         )
                         violation = temp_constraint._check_proximity(
                             room1, room2, context.building_lookup

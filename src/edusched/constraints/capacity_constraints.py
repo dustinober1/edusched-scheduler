@@ -71,9 +71,9 @@ class CapacityConstraint(Constraint):
                 message=(
                     f"Classroom {classroom_id} capacity ({classroom.capacity}) "
                     f"is insufficient for class {self.request_id} "
-                    f"(required: {required_capacity_with_buffer} with {self.buffer_percent*100}% buffer, "
+                    f"(required: {required_capacity_with_buffer} with {self.buffer_percent * 100}% buffer, "
                     f"enrollment: {request.enrollment_count})"
-                )
+                ),
             )
 
         # Check if classroom is too large (if max_capacity is specified)
@@ -86,7 +86,7 @@ class CapacityConstraint(Constraint):
                     f"Classroom {classroom_id} capacity ({classroom.capacity}) "
                     f"exceeds maximum allowed for class {self.request_id} "
                     f"(max: {request.max_capacity})"
-                )
+                ),
             )
 
         return None

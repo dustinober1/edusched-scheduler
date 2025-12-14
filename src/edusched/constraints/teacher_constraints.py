@@ -1,12 +1,11 @@
 """Constraints for teacher availability and conflict prevention."""
 
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
 if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
-    from edusched.domain.teacher import Teacher
 
 
 class TeacherConflictConstraint(Constraint):
@@ -35,7 +34,10 @@ class TeacherConflictConstraint(Constraint):
         # Check primary teacher
         if request.teacher_id != self.teacher_id:
             # Also check additional teachers
-            if not request.additional_teachers or self.teacher_id not in request.additional_teachers:
+            if (
+                not request.additional_teachers
+                or self.teacher_id not in request.additional_teachers
+            ):
                 return None
 
         # Check for conflicts with existing assignments
@@ -45,13 +47,16 @@ class TeacherConflictConstraint(Constraint):
                 continue
 
             # Skip if this is the same assignment
-            if existing.request_id == assignment.request_id and existing.occurrence_index == assignment.occurrence_index:
+            if (
+                existing.request_id == assignment.request_id
+                and existing.occurrence_index == assignment.occurrence_index
+            ):
                 continue
 
             # Check if teacher is assigned to existing session
-            teacher_in_existing = (
-                existing_request.teacher_id == self.teacher_id or
-                (existing_request.additional_teachers and self.teacher_id in existing_request.additional_teachers)
+            teacher_in_existing = existing_request.teacher_id == self.teacher_id or (
+                existing_request.additional_teachers
+                and self.teacher_id in existing_request.additional_teachers
             )
 
             if not teacher_in_existing:
@@ -66,7 +71,7 @@ class TeacherConflictConstraint(Constraint):
                         f"Teacher {self.teacher_id} is double-booked: "
                         f"session {assignment.request_id} conflicts with session {existing.request_id} "
                         f"from {existing.start_time} to {existing.end_time}"
-                    )
+                    ),
                 )
 
         return None
@@ -79,8 +84,8 @@ class TeacherConflictConstraint(Constraint):
 
         # Check time overlap
         return (
-            assignment1.start_time < assignment2.end_time and
-            assignment1.end_time > assignment2.start_time
+            assignment1.start_time < assignment2.end_time
+            and assignment1.end_time > assignment2.start_time
         )
 
     def explain(self, violation: Violation) -> str:
@@ -119,7 +124,10 @@ class TeacherAvailabilityConstraint(Constraint):
         # Check primary teacher
         if request.teacher_id != self.teacher_id:
             # Also check additional teachers
-            if not request.additional_teachers or self.teacher_id not in request.additional_teachers:
+            if (
+                not request.additional_teachers
+                or self.teacher_id not in request.additional_teachers
+            ):
                 return None
 
         teacher = context.teacher_lookup.get(self.teacher_id)
@@ -138,7 +146,7 @@ class TeacherAvailabilityConstraint(Constraint):
                 message=(
                     f"Teacher {teacher.name} ({self.teacher_id}) "
                     f"is not available on {day_of_week.capitalize()} for session {assignment.request_id}"
-                )
+                ),
             )
 
         # Check teacher's preferred times if specified
@@ -154,7 +162,7 @@ class TeacherAvailabilityConstraint(Constraint):
                         f"Teacher {teacher.name} ({self.teacher_id}) "
                         f"is not available during {start_time_str}-{end_time_str} on {day_of_week.capitalize()} "
                         f"for session {assignment.request_id}"
-                    )
+                    ),
                 )
 
         return None
@@ -195,7 +203,10 @@ class TeacherWorkloadConstraint(Constraint):
         # Check primary teacher
         if request.teacher_id != self.teacher_id:
             # Also check additional teachers
-            if not request.additional_teachers or self.teacher_id not in request.additional_teachers:
+            if (
+                not request.additional_teachers
+                or self.teacher_id not in request.additional_teachers
+            ):
                 return None
 
         teacher = context.teacher_lookup.get(self.teacher_id)
@@ -209,9 +220,9 @@ class TeacherWorkloadConstraint(Constraint):
             if not existing_request:
                 continue
 
-            teacher_in_existing = (
-                existing_request.teacher_id == self.teacher_id or
-                (existing_request.additional_teachers and self.teacher_id in existing_request.additional_teachers)
+            teacher_in_existing = existing_request.teacher_id == self.teacher_id or (
+                existing_request.additional_teachers
+                and self.teacher_id in existing_request.additional_teachers
             )
 
             if teacher_in_existing:
@@ -221,7 +232,7 @@ class TeacherWorkloadConstraint(Constraint):
         all_assignments = teacher_assignments + [assignment]
 
         # Calculate workload
-        from datetime import timedelta
+
         daily_hours = {}
         weekly_hours = {}
 
@@ -247,7 +258,7 @@ class TeacherWorkloadConstraint(Constraint):
                         message=(
                             f"Teacher {teacher.name} would exceed daily limit of {teacher.max_daily_hours} hours "
                             f"({hours:.1f} hours on {day}) with session {assignment.request_id}"
-                        )
+                        ),
                     )
 
         # Check weekly limit
@@ -260,7 +271,7 @@ class TeacherWorkloadConstraint(Constraint):
                         message=(
                             f"Teacher {teacher.name} would exceed weekly limit of {teacher.max_weekly_hours} hours "
                             f"({hours:.1f} hours in week {week}) with session {assignment.request_id}"
-                        )
+                        ),
                     )
 
         return None
@@ -299,9 +310,8 @@ class TeacherTravelTimeConstraint(Constraint):
             return None
 
         # Check if this teacher is assigned to this session
-        teacher_in_session = (
-            request.teacher_id == self.teacher_id or
-            (request.additional_teachers and self.teacher_id in request.additional_teachers)
+        teacher_in_session = request.teacher_id == self.teacher_id or (
+            request.additional_teachers and self.teacher_id in request.additional_teachers
         )
         if not teacher_in_session:
             return None
@@ -316,7 +326,8 @@ class TeacherTravelTimeConstraint(Constraint):
 
         # Get teacher's other assignments on the same day
         other_assignments = [
-            a for a in solution
+            a
+            for a in solution
             if a != assignment  # Not the same assignment
             and a.start_time.date() == assignment.start_time.date()  # Same day
             and self._teacher_assigned_to_session(a, context)  # Teacher assigned
@@ -327,7 +338,11 @@ class TeacherTravelTimeConstraint(Constraint):
             other_building_id = self._get_assignment_building_id(other, context)
 
             # Skip if same building or no building info
-            if not current_building_id or not other_building_id or current_building_id == other_building_id:
+            if (
+                not current_building_id
+                or not other_building_id
+                or current_building_id == other_building_id
+            ):
                 continue
 
             # Check if classes are consecutive (other before current)
@@ -340,7 +355,7 @@ class TeacherTravelTimeConstraint(Constraint):
                         message=(
                             f"Insufficient travel time from {other_building_id} to {current_building_id}: "
                             f"{gap_minutes:.0f} < {teacher.max_travel_time_between_classes} minutes"
-                        )
+                        ),
                     )
 
             # Check if classes are consecutive (current before other)
@@ -353,29 +368,32 @@ class TeacherTravelTimeConstraint(Constraint):
                         message=(
                             f"Insufficient travel time from {current_building_id} to {other_building_id}: "
                             f"{gap_minutes:.0f} < {teacher.max_travel_time_between_classes} minutes"
-                        )
+                        ),
                     )
 
         return None
 
-    def _get_assignment_building_id(self, assignment: "Assignment", context: ConstraintContext) -> Optional[str]:
+    def _get_assignment_building_id(
+        self, assignment: "Assignment", context: ConstraintContext
+    ) -> Optional[str]:
         """Get building ID for an assignment."""
         if "classroom" in assignment.assigned_resources:
             room_id = assignment.assigned_resources["classroom"][0]
             room = context.resource_lookup.get(room_id)
-            if room and hasattr(room, 'building_id'):
+            if room and hasattr(room, "building_id"):
                 return room.building_id
         return None
 
-    def _teacher_assigned_to_session(self, assignment: "Assignment", context: ConstraintContext) -> bool:
+    def _teacher_assigned_to_session(
+        self, assignment: "Assignment", context: ConstraintContext
+    ) -> bool:
         """Check if teacher is assigned to a session."""
         request = context.request_lookup.get(assignment.request_id)
         if not request:
             return False
 
-        return (
-            request.teacher_id == self.teacher_id or
-            (request.additional_teachers and self.teacher_id in request.additional_teachers)
+        return request.teacher_id == self.teacher_id or (
+            request.additional_teachers and self.teacher_id in request.additional_teachers
         )
 
     def explain(self, violation: Violation) -> str:

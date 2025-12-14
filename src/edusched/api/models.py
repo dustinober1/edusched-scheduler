@@ -1,6 +1,7 @@
 """Pydantic models for API request/response and data validation."""
 
-from typing import List, Optional
+from typing import Any, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -41,7 +42,7 @@ class AssignmentModel(BaseModel):
     request_id: str
     resource_id: str
     start_time: str  # ISO format datetime
-    end_time: str    # ISO format datetime
+    end_time: str  # ISO format datetime
     course_code: Optional[str] = None
     teacher_name: Optional[str] = None
     room_name: Optional[str] = None
@@ -63,7 +64,7 @@ class ValidationError(BaseModel):
 
     field: str
     message: str
-    value: Optional[any] = None
+    value: Optional[Any] = None
 
 
 class BulkImportResponse(BaseModel):

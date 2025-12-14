@@ -2,9 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Literal, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 
 from edusched.errors import ValidationError
+
+if TYPE_CHECKING:
+    from edusched.domain.equipment import EquipmentRequirement
 
 
 @dataclass
@@ -22,7 +25,7 @@ class SessionRequest:
 
     # Enrollment and capacity requirements
     enrollment_count: int = 0  # Number of students enrolled in the class
-    min_capacity: int = 0      # Minimum classroom capacity required
+    min_capacity: int = 0  # Minimum classroom capacity required
     max_capacity: Optional[int] = None  # Maximum acceptable classroom capacity (None for no limit)
 
     # Department and teacher information
@@ -33,18 +36,36 @@ class SessionRequest:
     # Building and room preferences
     preferred_building_id: Optional[str] = None
     required_building_id: Optional[str] = None  # Must be in this building
-    required_resource_types: Optional[Dict[str, int]] = None  # e.g., {"classroom": 1, "breakout": 2}
+    required_resource_types: Optional[Dict[str, int]] = (
+        None  # e.g., {"classroom": 1, "breakout": 2}
+    )
 
     # Day-specific requirements (days of week when resources are needed)
-    day_requirements: Optional[Dict[int, List[str]]] = None  # {0: ["classroom", "breakout"], 2: ["classroom"]}
+    day_requirements: Optional[Dict[int, List[str]]] = (
+        None  # {0: ["classroom", "breakout"], 2: ["classroom"]}
+    )
     # Where 0=Monday, 1=Tuesday, ..., 6=Sunday
 
     # Scheduling pattern and preferences
-    scheduling_pattern: Optional[str] = None  # "5days", "4days_mt", "4days_tf", "3days_mw", "3days_wf", "2days_mt", "2days_tf"
-    preferred_time_slots: Optional[List[Dict[str, str]]] = None  # [{ "start": "09:00", "end": "11:00" }]
+    scheduling_pattern: Optional[str] = (
+        None  # "5days", "4days_mt", "4days_tf", "3days_mw", "3days_wf", "2days_mt", "2days_tf"
+    )
+    preferred_time_slots: Optional[List[Dict[str, str]]] = (
+        None  # [{ "start": "09:00", "end": "11:00" }]
+    )
     avoid_holidays: bool = True  # Default to avoiding holidays
     min_gap_between_occurrences: Optional[timedelta] = None  # Minimum gap between class occurrences
     max_occurrences_per_week: Optional[int] = None  # Maximum occurrences in a single week
+
+    # Equipment requirements
+    equipment_requirements: Optional[List["EquipmentRequirement"]] = (
+        None  # List of required equipment
+    )
+    setup_time_minutes: int = 0  # Additional setup time needed before session
+    teardown_time_minutes: int = 0  # Time needed after session for cleanup
+
+    # User tracking for equipment certification
+    user_id: Optional[str] = None  # User requesting this session
 
     def validate(self) -> List[ValidationError]:
         """
@@ -133,7 +154,11 @@ class SessionRequest:
                 )
             )
 
-        if self.min_capacity > 0 and self.max_capacity is not None and self.min_capacity > self.max_capacity:
+        if (
+            self.min_capacity > 0
+            and self.max_capacity is not None
+            and self.min_capacity > self.max_capacity
+        ):
             errors.append(
                 ValidationError(
                     field="capacity_range",
@@ -145,12 +170,51 @@ class SessionRequest:
         # Validate modality
         valid_modalities = {"online", "in_person", "hybrid"}
         if self.modality not in valid_modalities:
-             errors.append(
+            errors.append(
                 ValidationError(
                     field="modality",
                     expected_format=f"one of {valid_modalities}",
                     actual_value=self.modality,
                 )
             )
+
+        # Validate setup/teardown times
+        if self.setup_time_minutes < 0:
+            errors.append(
+                ValidationError(
+                    field="setup_time_minutes",
+                    expected_format="non-negative integer",
+                    actual_value=self.setup_time_minutes,
+                )
+            )
+
+        if self.teardown_time_minutes < 0:
+            errors.append(
+                ValidationError(
+                    field="teardown_time_minutes",
+                    expected_format="non-negative integer",
+                    actual_value=self.teardown_time_minutes,
+                )
+            )
+
+        # Validate equipment requirements if present
+        if self.equipment_requirements:
+            for req in self.equipment_requirements:
+                if req.quantity <= 0:
+                    errors.append(
+                        ValidationError(
+                            field="equipment_requirements.quantity",
+                            expected_format="positive integer",
+                            actual_value=req.quantity,
+                        )
+                    )
+                if not req.equipment_type_id:
+                    errors.append(
+                        ValidationError(
+                            field="equipment_requirements.equipment_type_id",
+                            expected_format="non-empty string",
+                            actual_value=req.equipment_type_id,
+                        )
+                    )
 
         return errors

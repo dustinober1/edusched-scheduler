@@ -33,7 +33,10 @@ class NoOverlap(Constraint):
                         continue
 
                     # Check for time overlap
-                    if assignment.start_time < existing.end_time and assignment.end_time > existing.start_time:
+                    if (
+                        assignment.start_time < existing.end_time
+                        and assignment.end_time > existing.start_time
+                    ):
                         return Violation(
                             constraint_type=self.constraint_type,
                             affected_request_id=assignment.request_id,
@@ -81,7 +84,7 @@ class BlackoutDates(Constraint):
 
     def explain(self, violation: Violation) -> str:
         """Explain the blackout violation."""
-        return f"Assignment falls within a blackout period"
+        return "Assignment falls within a blackout period"
 
     @property
     def constraint_type(self) -> str:
@@ -104,7 +107,6 @@ class MaxPerDay(Constraint):
     ) -> Optional[Violation]:
         """Check if adding this assignment exceeds daily limit."""
         # Count assignments for this resource on the same day
-        from datetime import date
 
         assignment_date = assignment.start_time.date()
         count = 0
@@ -182,7 +184,7 @@ class MinGapBetweenOccurrences(Constraint):
 
     def explain(self, violation: Violation) -> str:
         """Explain the gap violation."""
-        return f"Minimum gap between occurrences not maintained"
+        return "Minimum gap between occurrences not maintained"
 
     @property
     def constraint_type(self) -> str:
@@ -210,7 +212,10 @@ class WithinDateRange(Constraint):
         if not request:
             return None
 
-        if assignment.start_time < request.earliest_date or assignment.end_time > request.latest_date:
+        if (
+            assignment.start_time < request.earliest_date
+            or assignment.end_time > request.latest_date
+        ):
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=self.request_id,
@@ -221,7 +226,7 @@ class WithinDateRange(Constraint):
 
     def explain(self, violation: Violation) -> str:
         """Explain the date range violation."""
-        return f"Assignment falls outside the specified date range"
+        return "Assignment falls outside the specified date range"
 
     @property
     def constraint_type(self) -> str:
@@ -268,7 +273,7 @@ class AttributeMatch(Constraint):
 
     def explain(self, violation: Violation) -> str:
         """Explain the attribute mismatch."""
-        return f"Resource does not satisfy required attributes"
+        return "Resource does not satisfy required attributes"
 
     @property
     def constraint_type(self) -> str:

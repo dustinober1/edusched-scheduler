@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 if TYPE_CHECKING:
     from edusched.api.models import User
@@ -13,7 +13,7 @@ security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> "User":
     """
     Get the current authenticated user.
@@ -77,9 +77,7 @@ async def get_current_user(
         )
 
 
-async def get_active_user(
-    current_user: "User" = Depends(get_current_user)
-) -> "User":
+async def get_active_user(current_user: "User" = Depends(get_current_user)) -> "User":
     """
     Get the current active user.
 
@@ -93,16 +91,11 @@ async def get_active_user(
         HTTPException: If user is not active
     """
     if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return current_user
 
 
-async def get_superuser(
-    current_user: "User" = Depends(get_active_user)
-) -> "User":
+async def get_superuser(current_user: "User" = Depends(get_active_user)) -> "User":
     """
     Get the current superuser.
 
@@ -116,10 +109,7 @@ async def get_superuser(
         HTTPException: If user is not a superuser
     """
     if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     return current_user
 
 
@@ -188,6 +178,5 @@ async def check_rate_limit(client_ip: str = None):
     """
     if client_ip and not await rate_limiter.check_rate_limit(client_ip):
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Rate limit exceeded"
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
         )

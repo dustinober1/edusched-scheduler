@@ -27,7 +27,7 @@ def check_capacity_fit(
     enrollment_count: int,
     min_capacity: int = 0,
     max_capacity: Optional[int] = None,
-    buffer_percent: float = 0.1
+    buffer_percent: float = 0.1,
 ) -> Tuple[bool, str]:
     """
     Check if a classroom can accommodate a class.
@@ -59,7 +59,7 @@ def check_capacity_fit(
     if classroom.capacity < required_with_buffer:
         return False, (
             f"Classroom capacity ({classroom.capacity}) is less than required "
-            f"({required_with_buffer} including {buffer_percent*100}% buffer)"
+            f"({required_with_buffer} including {buffer_percent * 100}% buffer)"
         )
 
     # Check maximum capacity
@@ -82,7 +82,7 @@ def recommend_classrooms(
     max_capacity: Optional[int] = None,
     buffer_percent: float = 0.1,
     building_id: Optional[str] = None,
-    max_recommendations: int = 5
+    max_recommendations: int = 5,
 ) -> List[Tuple[Resource, str, float]]:
     """
     Recommend suitable classrooms for a class.
@@ -130,9 +130,7 @@ def recommend_classrooms(
 
 
 def calculate_efficiency_score(
-    classroom_capacity: int,
-    required_capacity: int,
-    max_capacity: Optional[int] = None
+    classroom_capacity: int, required_capacity: int, max_capacity: Optional[int] = None
 ) -> float:
     """
     Calculate how efficiently a classroom fits a requirement.
@@ -178,8 +176,9 @@ def get_capacity_statistics(classrooms: List[Resource]) -> Dict[str, any]:
     Returns:
         Dictionary with capacity statistics
     """
-    capacities = [c.capacity for c in classrooms
-                  if c.resource_type == "classroom" and c.capacity is not None]
+    capacities = [
+        c.capacity for c in classrooms if c.resource_type == "classroom" and c.capacity is not None
+    ]
 
     if not capacities:
         return {
@@ -187,7 +186,7 @@ def get_capacity_statistics(classrooms: List[Resource]) -> Dict[str, any]:
             "min_capacity": 0,
             "max_capacity": 0,
             "avg_capacity": 0,
-            "total_capacity": 0
+            "total_capacity": 0,
         }
 
     return {
@@ -195,14 +194,14 @@ def get_capacity_statistics(classrooms: List[Resource]) -> Dict[str, any]:
         "min_capacity": min(capacities),
         "max_capacity": max(capacities),
         "avg_capacity": sum(capacities) / len(capacities),
-        "total_capacity": sum(capacities)
+        "total_capacity": sum(capacities),
     }
 
 
 def find_classrooms_for_class(
     session_request: SessionRequest,
     available_classrooms: List[Resource],
-    buffer_percent: float = 0.1
+    buffer_percent: float = 0.1,
 ) -> List[Resource]:
     """
     Find suitable classrooms for a session request.
@@ -221,7 +220,7 @@ def find_classrooms_for_class(
         min_capacity=session_request.min_capacity,
         max_capacity=session_request.max_capacity,
         buffer_percent=buffer_percent,
-        building_id=session_request.required_building_id or session_request.preferred_building_id
+        building_id=session_request.required_building_id or session_request.preferred_building_id,
     )
 
     return [r for r, _, _ in recommendations]

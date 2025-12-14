@@ -566,13 +566,13 @@ class TestStudentFeatures:
             print(f"   Affected: {len(score.affected_parties)} parties")
 
         print("\nIntegration test completed successfully!")
-        return {
-            "courses": courses,
-            "students": students,
-            "rooms": rooms,
-            "total_conflict_score": total_score,
-            "schedule_quality": quality_score
-        }
+        
+        # Assert test results instead of returning
+        assert len(courses) == 4
+        assert len(students) == 3
+        assert len(rooms) == 3
+        assert total_score > 0
+        assert 0 <= quality_score <= 1
 
     def test_real_world_scenario(self):
         """Test a real-world scheduling scenario."""

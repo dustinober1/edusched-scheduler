@@ -1,15 +1,16 @@
 """Student domain model for registration and course planning."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, date
-from typing import Dict, List, Optional, Set, Tuple
+from datetime import date, datetime
 from enum import Enum
+from typing import Dict, List, Optional, Set, Tuple
 
 from edusched.errors import ValidationError
 
 
 class StudentStatus(Enum):
     """Student academic status."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     ON_LEAVE = "on_leave"
@@ -19,6 +20,7 @@ class StudentStatus(Enum):
 
 class AcademicLevel(Enum):
     """Student academic level."""
+
     FRESHMAN = "freshman"
     SOPHOMORE = "sophomore"
     JUNIOR = "junior"
@@ -30,6 +32,7 @@ class AcademicLevel(Enum):
 @dataclass
 class Registration:
     """Represents a student's course registration."""
+
     student_id: str
     course_id: str
     section_id: Optional[str] = None  # For multi-section courses
@@ -41,6 +44,7 @@ class Registration:
 @dataclass
 class EnrollmentRecord:
     """Tracks student's academic progress."""
+
     student_id: str
     semester: str
     year: int
@@ -67,8 +71,12 @@ class Student:
     concentration: Optional[str] = None
 
     # Registration preferences
-    preferred_sections: Dict[str, int] = field(default_factory=dict)  # course_id -> section preference
-    avoid_times: List[Dict[str, str]] = field(default_factory=list)  # [{"start": "08:00", "end": "09:00"}]
+    preferred_sections: Dict[str, int] = field(
+        default_factory=dict
+    )  # course_id -> section preference
+    avoid_times: List[Dict[str, str]] = field(
+        default_factory=list
+    )  # [{"start": "08:00", "end": "09:00"}]
     max_credits_per_semester: int = 18
     min_credits_per_semester: int = 12
 
@@ -79,8 +87,12 @@ class Student:
 
     # Work/schedule constraints
     has_job: bool = False
-    work_hours: List[Dict[str, str]] = field(default_factory=list)  # [{"day": "monday", "start": "17:00", "end": "22:00"}]
-    preferred_class_blocks: List[str] = field(default_factory=list)  # ["morning", "afternoon", "evening"]
+    work_hours: List[Dict[str, str]] = field(
+        default_factory=list
+    )  # [{"day": "monday", "start": "17:00", "end": "22:00"}]
+    preferred_class_blocks: List[str] = field(
+        default_factory=list
+    )  # ["morning", "afternoon", "evening"]
 
     # Academic information
     cumulative_gpa: Optional[float] = None
@@ -97,10 +109,14 @@ class Student:
     # Registration tracking
     registrations: List[Registration] = field(default_factory=list)
     enrollment_history: List[EnrollmentRecord] = field(default_factory=list)
-    holds: List[Dict[str, str]] = field(default_factory=list)  # [{"type": "financial", "reason": ""}]
+    holds: List[Dict[str, str]] = field(
+        default_factory=list
+    )  # [{"type": "financial", "reason": ""}]
 
     # Course history for prerequisite checking
-    completed_courses: Dict[str, Tuple[date, str]] = field(default_factory=dict)  # course_id -> (date, grade)
+    completed_courses: Dict[str, Tuple[date, str]] = field(
+        default_factory=dict
+    )  # course_id -> (date, grade)
     in_progress_courses: Set[str] = field(default_factory=set)
 
     def validate(self) -> List[ValidationError]:
@@ -108,35 +124,41 @@ class Student:
         errors: List[ValidationError] = []
 
         if not self.id:
-            errors.append(ValidationError(
-                field="id",
-                expected_format="non-empty string",
-                actual_value=self.id
-            ))
+            errors.append(
+                ValidationError(
+                    field="id", expected_format="non-empty string", actual_value=self.id
+                )
+            )
 
         if not self.first_name or not self.last_name:
-            errors.append(ValidationError(
-                field="name",
-                expected_format="first and last name required",
-                actual_value=f"{self.first_name} {self.last_name}"
-            ))
+            errors.append(
+                ValidationError(
+                    field="name",
+                    expected_format="first and last name required",
+                    actual_value=f"{self.first_name} {self.last_name}",
+                )
+            )
 
         # Validate credit limits
         if self.min_credits_per_semester > self.max_credits_per_semester:
-            errors.append(ValidationError(
-                field="credits",
-                expected_format="min_credits <= max_credits",
-                actual_value=f"{self.min_credits_per_semester} > {self.max_credits_per_semester}"
-            ))
+            errors.append(
+                ValidationError(
+                    field="credits",
+                    expected_format="min_credits <= max_credits",
+                    actual_value=f"{self.min_credits_per_semester} > {self.max_credits_per_semester}",
+                )
+            )
 
         # Validate GPA if provided
         if self.cumulative_gpa is not None:
             if not (0.0 <= self.cumulative_gpa <= 4.0):
-                errors.append(ValidationError(
-                    field="cumulative_gpa",
-                    expected_format="0.0 to 4.0",
-                    actual_value=self.cumulative_gpa
-                ))
+                errors.append(
+                    ValidationError(
+                        field="cumulative_gpa",
+                        expected_format="0.0 to 4.0",
+                        actual_value=self.cumulative_gpa,
+                    )
+                )
 
         return errors
 
@@ -178,12 +200,15 @@ class Student:
                 missing.append(prereq)
         return len(missing) == 0, missing
 
-    def has_time_conflict(self, new_course_time: Tuple[datetime, datetime],
-                         existing_courses: List[Tuple[datetime, datetime]]) -> bool:
+    def has_time_conflict(
+        self,
+        new_course_time: Tuple[datetime, datetime],
+        existing_courses: List[Tuple[datetime, datetime]],
+    ) -> bool:
         """Check if new course time conflicts with existing courses."""
         for existing_start, existing_end in existing_courses:
             # Check for overlap
-            if (new_course_time[0] < existing_end and new_course_time[1] > existing_start):
+            if new_course_time[0] < existing_end and new_course_time[1] > existing_start:
                 return True
         return False
 
@@ -216,7 +241,8 @@ class Student:
     def get_semester_schedule(self, semester: str, year: int) -> List[Registration]:
         """Get student's schedule for a specific semester."""
         return [
-            reg for reg in self.registrations
+            reg
+            for reg in self.registrations
             if reg.status == "registered"
             and self._get_semester_from_date(reg.registration_date or datetime.now()) == semester
             and (reg.registration_date or datetime.now()).year == year
@@ -247,7 +273,7 @@ class Student:
             student_id=self.id,
             course_id=course_id,
             section_id=section_id,
-            registration_date=datetime.now()
+            registration_date=datetime.now(),
         )
         self.registrations.append(registration)
         return registration

@@ -5,18 +5,18 @@ In later phases, this would be replaced with a proper database
 like PostgreSQL or MongoDB.
 """
 
-import json
 import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
 
-from edusched.api.models import AssignmentModel, ScheduleResponse
+from edusched.api.models import AssignmentModel
 
 
 @dataclass
 class ScheduleRecord:
     """Represents a stored schedule record."""
+
     id: str
     name: str
     user_id: str
@@ -166,9 +166,7 @@ class InMemoryDatabase:
             List of schedule records
         """
         schedule_ids = self.user_schedules.get(user_id, [])
-        schedules = [
-            self.schedules[sid] for sid in schedule_ids if sid in self.schedules
-        ]
+        schedules = [self.schedules[sid] for sid in schedule_ids if sid in self.schedules]
 
         # Sort by updated_at descending
         schedules.sort(key=lambda s: s.updated_at, reverse=True)
@@ -236,9 +234,7 @@ class InMemoryDatabase:
             status_counts[status] = status_counts.get(status, 0) + 1
 
         # User distribution
-        user_schedule_counts = [
-            len(schedule_ids) for schedule_ids in self.user_schedules.values()
-        ]
+        user_schedule_counts = [len(schedule_ids) for schedule_ids in self.user_schedules.values()]
 
         return {
             "total_schedules": total_schedules,
@@ -255,9 +251,7 @@ class InMemoryDatabase:
             All data as dictionary
         """
         return {
-            "schedules": {
-                sid: asdict(schedule) for sid, schedule in self.schedules.items()
-            },
+            "schedules": {sid: asdict(schedule) for sid, schedule in self.schedules.items()},
             "user_schedules": self.user_schedules,
             "exported_at": datetime.now().isoformat(),
         }
@@ -279,12 +273,8 @@ class InMemoryDatabase:
             # Import schedules
             for schedule_id, schedule_data in data.get("schedules", {}).items():
                 # Convert datetime strings back to datetime objects
-                schedule_data["created_at"] = datetime.fromisoformat(
-                    schedule_data["created_at"]
-                )
-                schedule_data["updated_at"] = datetime.fromisoformat(
-                    schedule_data["updated_at"]
-                )
+                schedule_data["created_at"] = datetime.fromisoformat(schedule_data["created_at"])
+                schedule_data["updated_at"] = datetime.fromisoformat(schedule_data["updated_at"])
 
                 schedule = ScheduleRecord(**schedule_data)
                 self.schedules[schedule_id] = schedule

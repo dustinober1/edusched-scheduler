@@ -1,8 +1,8 @@
 """Teacher domain model."""
 
 from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Tuple
-from datetime import datetime, date, timedelta
 
 from edusched.errors import ValidationError
 
@@ -20,13 +20,21 @@ class Teacher:
 
     # Teaching availability
     availability_calendar_id: Optional[str] = None
-    preferred_days: List[str] = field(default_factory=list)  # e.g., ["monday", "tuesday", "wednesday"]
-    preferred_times: Dict[str, List[str]] = field(default_factory=dict)  # e.g., {"monday": ["09:00-12:00"]}
+    preferred_days: List[str] = field(
+        default_factory=list
+    )  # e.g., ["monday", "tuesday", "wednesday"]
+    preferred_times: Dict[str, List[str]] = field(
+        default_factory=dict
+    )  # e.g., {"monday": ["09:00-12:00"]}
     unavailable_periods: List[str] = field(default_factory=list)  # Times when teacher cannot teach
 
     # Vacation and personal time off
-    vacation_periods: List[Tuple[date, date, str]] = field(default_factory=list)  # (start, end, reason)
-    conference_dates: List[Tuple[date, date, str]] = field(default_factory=list)  # (start, end, conference_name)
+    vacation_periods: List[Tuple[date, date, str]] = field(
+        default_factory=list
+    )  # (start, end, reason)
+    conference_dates: List[Tuple[date, date, str]] = field(
+        default_factory=list
+    )  # (start, end, conference_name)
     personal_days: List[date] = field(default_factory=list)  # Individual days off
 
     # Teaching constraints
@@ -49,15 +57,25 @@ class Teacher:
     # Course teaching capabilities
     qualified_courses: List[str] = field(default_factory=list)  # Course IDs teacher can teach
     preferred_courses: List[str] = field(default_factory=list)  # Courses teacher prefers to teach
-    excluded_courses: List[str] = field(default_factory=list)  # Courses teacher cannot/will not teach
+    excluded_courses: List[str] = field(
+        default_factory=list
+    )  # Courses teacher cannot/will not teach
 
     # Course-specific requirements
-    course_setup_requirements: Dict[str, int] = field(default_factory=dict)  # Course ID -> setup minutes
-    course_cleanup_requirements: Dict[str, int] = field(default_factory=dict)  # Course ID -> cleanup minutes
-    course_buffer_requirements: Dict[str, Dict[str, int]] = field(default_factory=dict)  # Course ID -> {before, after} days
+    course_setup_requirements: Dict[str, int] = field(
+        default_factory=dict
+    )  # Course ID -> setup minutes
+    course_cleanup_requirements: Dict[str, int] = field(
+        default_factory=dict
+    )  # Course ID -> cleanup minutes
+    course_buffer_requirements: Dict[str, Dict[str, int]] = field(
+        default_factory=dict
+    )  # Course ID -> {before, after} days
 
     # Concurrent course restrictions
-    mutually_exclusive_courses: List[List[str]] = field(default_factory=list)  # Courses that cannot run same term
+    mutually_exclusive_courses: List[List[str]] = field(
+        default_factory=list
+    )  # Courses that cannot run same term
     concurrent_teaching_limit: int = 1  # Max courses that can be taught simultaneously
 
     def validate(self) -> List[ValidationError]:
@@ -91,7 +109,15 @@ class Teacher:
 
         # Validate preferred days
         if self.preferred_days:
-            valid_days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            valid_days = [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            ]
             for day in self.preferred_days:
                 if day.lower() not in valid_days:
                     errors.append(
@@ -216,7 +242,7 @@ class Teacher:
         end_time: datetime,
         existing_assignments: List["Assignment"],
         building_id: Optional[str] = None,
-        requires_setup: bool = False
+        requires_setup: bool = False,
     ) -> Tuple[bool, str]:
         """
         Check if teacher can schedule a class at the specified time.
@@ -258,7 +284,10 @@ class Teacher:
             existing_latest = existing.end_time + timedelta(minutes=self.cleanup_time_minutes)
 
             if earliest_start < existing_latest and latest_end > existing_earliest:
-                return False, f"Conflicts with existing class at {existing.start_time.strftime('%Y-%m-%d %H:%M')}"
+                return (
+                    False,
+                    f"Conflicts with existing class at {existing.start_time.strftime('%Y-%m-%d %H:%M')}",
+                )
 
         # Check travel time between buildings (if different buildings)
         if building_id and existing_assignments:
@@ -269,17 +298,20 @@ class Teacher:
                     if existing.end_time <= start_time:
                         gap_minutes = (start_time - existing.end_time).total_seconds() / 60
                         if gap_minutes < self.max_travel_time_between_classes:
-                            return False, f"Insufficient travel time (need {self.max_travel_time_between_classes} min, have {gap_minutes:.0f} min)"
+                            return (
+                                False,
+                                f"Insufficient travel time (need {self.max_travel_time_between_classes} min, have {gap_minutes:.0f} min)",
+                            )
 
         # Check daily teaching load
-        day_assignments = [a for a in existing_assignments
-                          if a.start_time.date() == start_time.date()]
+        day_assignments = [
+            a for a in existing_assignments if a.start_time.date() == start_time.date()
+        ]
 
         if day_assignments:
             # Calculate hours for this day including new class
             daily_hours = sum(
-                (a.end_time - a.start_time).total_seconds() / 3600
-                for a in day_assignments
+                (a.end_time - a.start_time).total_seconds() / 3600 for a in day_assignments
             )
             new_hours = (end_time - start_time).total_seconds() / 3600
             total_hours = daily_hours + new_hours
@@ -288,9 +320,11 @@ class Teacher:
                 return False, f"Exceeds daily teaching limit of {self.max_daily_hours} hours"
 
             # Check consecutive hours
-            sorted_assignments = sorted(day_assignments + [type('Assignment', (), {
-                'start_time': start_time, 'end_time': end_time
-            })()], key=lambda a: a.start_time)
+            sorted_assignments = sorted(
+                day_assignments
+                + [type("Assignment", (), {"start_time": start_time, "end_time": end_time})()],
+                key=lambda a: a.start_time,
+            )
 
             consecutive = 0
             last_end = None
@@ -298,15 +332,24 @@ class Teacher:
                 if last_end:
                     gap = (assignment.start_time - last_end).total_seconds() / 60
                     if gap < 60:  # Less than 1 hour gap is considered consecutive
-                        consecutive += (assignment.end_time - assignment.start_time).total_seconds() / 3600
+                        consecutive += (
+                            assignment.end_time - assignment.start_time
+                        ).total_seconds() / 3600
                     else:
-                        consecutive = (assignment.end_time - assignment.start_time).total_seconds() / 3600
+                        consecutive = (
+                            assignment.end_time - assignment.start_time
+                        ).total_seconds() / 3600
                 else:
-                    consecutive = (assignment.end_time - assignment.start_time).total_seconds() / 3600
+                    consecutive = (
+                        assignment.end_time - assignment.start_time
+                    ).total_seconds() / 3600
 
                 last_end = assignment.end_time
                 if self.max_consecutive_hours and consecutive > self.max_consecutive_hours:
-                    return False, f"Exceeds consecutive teaching limit of {self.max_consecutive_hours} hours"
+                    return (
+                        False,
+                        f"Exceeds consecutive teaching limit of {self.max_consecutive_hours} hours",
+                    )
 
         return True, "Available"
 
@@ -388,7 +431,7 @@ class Teacher:
         setup_minutes: Optional[int] = None,
         cleanup_minutes: Optional[int] = None,
         buffer_days_before: Optional[int] = None,
-        buffer_days_after: Optional[int] = None
+        buffer_days_after: Optional[int] = None,
     ) -> None:
         """Add specific requirements for teaching a course."""
         if setup_minutes is not None:
@@ -424,10 +467,7 @@ class Teacher:
         return len(other_courses) < self.concurrent_teaching_limit
 
     def get_teaching_load_for_period(
-        self,
-        start_date: date,
-        end_date: date,
-        assignments: List["Assignment"]
+        self, start_date: date, end_date: date, assignments: List["Assignment"]
     ) -> Dict[str, float]:
         """
         Calculate teacher's teaching load for a period.
@@ -443,8 +483,13 @@ class Teacher:
             # Check if this assignment is for this teacher
             # (This would need proper teacher assignment tracking)
             # For now, assume all assignments are for this teacher
-            if assignment.start_time.date() >= start_date and assignment.start_time.date() <= end_date:
-                duration_hours = (assignment.end_time - assignment.start_time).total_seconds() / 3600
+            if (
+                assignment.start_time.date() >= start_date
+                and assignment.start_time.date() <= end_date
+            ):
+                duration_hours = (
+                    assignment.end_time - assignment.start_time
+                ).total_seconds() / 3600
                 total_hours += duration_hours
                 course_count += 1
                 days_teaching.add(assignment.start_time.date())
@@ -453,5 +498,5 @@ class Teacher:
             "total_hours": total_hours,
             "course_count": course_count,
             "days_teaching": len(days_teaching),
-            "average_hours_per_day": total_hours / max(len(days_teaching), 1)
+            "average_hours_per_day": total_hours / max(len(days_teaching), 1),
         }

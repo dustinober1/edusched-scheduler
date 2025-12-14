@@ -1,7 +1,6 @@
 """Blackout period constraints for room unavailability."""
 
 from typing import TYPE_CHECKING, Optional
-from datetime import datetime
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
@@ -45,16 +44,14 @@ class BlackoutDateConstraint(Constraint):
             return None
 
         # Check availability (this will include blackout checks)
-        is_available, reason = resource.is_available(
-            assignment.start_time, assignment.end_time
-        )
+        is_available, reason = resource.is_available(assignment.start_time, assignment.end_time)
 
         if not is_available and "blackout" in reason.lower():
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
                 affected_resource_id=self.resource_id,
-                message=reason
+                message=reason,
             )
 
         return None
@@ -106,16 +103,14 @@ class BuildingBlackoutConstraint(Constraint):
 
         # Check each resource for blackout
         for resource in building_resources:
-            is_available, reason = resource.is_available(
-                assignment.start_time, assignment.end_time
-            )
+            is_available, reason = resource.is_available(assignment.start_time, assignment.end_time)
 
             if not is_available and "building blackout" in reason.lower():
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=assignment.request_id,
                     affected_resource_id=resource.id,
-                    message=f"Building blackout: {reason}"
+                    message=f"Building blackout: {reason}",
                 )
 
         return None

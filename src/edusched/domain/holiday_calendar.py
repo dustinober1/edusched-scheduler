@@ -1,8 +1,8 @@
 """Holiday calendar domain model for managing academic holidays and breaks."""
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple
+from datetime import date, timedelta
+from typing import List, Set, Tuple
 
 from edusched.errors import ValidationError
 
@@ -38,9 +38,13 @@ class HolidayCalendar:
     name: str
     year: int
     holidays: List[HolidayPeriod] = field(default_factory=list)
-    excluded_weekdays: Set[int] = field(default_factory=set)  # Weekdays with no classes (e.g., weekends)
+    excluded_weekdays: Set[int] = field(
+        default_factory=set
+    )  # Weekdays with no classes (e.g., weekends)
 
-    def add_holiday(self, start_date: date, end_date: date, name: str, holiday_type: str = "holiday"):
+    def add_holiday(
+        self, start_date: date, end_date: date, name: str, holiday_type: str = "holiday"
+    ):
         """Add a holiday period."""
         holiday = HolidayPeriod(start_date, end_date, name, holiday_type)
         self.holidays.append(holiday)
@@ -122,12 +126,12 @@ class HolidayCalendar:
         """
         patterns = {
             "5days": [0, 1, 2, 3, 4],  # Mon-Fri
-            "4days_mt": [0, 1, 2, 3],    # Mon-Thu
-            "4days_tf": [1, 2, 3, 4],    # Tue-Fri
-            "3days_mw": [0, 1, 2],        # Mon-Wed
-            "3days_wf": [2, 3, 4],        # Wed-Fri
-            "2days_mt": [0, 1],            # Mon-Tue
-            "2days_tf": [3, 4],            # Thu-Fri
+            "4days_mt": [0, 1, 2, 3],  # Mon-Thu
+            "4days_tf": [1, 2, 3, 4],  # Tue-Fri
+            "3days_mw": [0, 1, 2],  # Mon-Wed
+            "3days_wf": [2, 3, 4],  # Wed-Fri
+            "2days_mt": [0, 1],  # Mon-Tue
+            "2days_tf": [3, 4],  # Thu-Fri
         }
 
         return patterns.get(pattern, [0, 1, 2, 3, 4])  # Default to Mon-Fri
@@ -142,9 +146,9 @@ class HolidayCalendar:
             return 4
         elif duration_minutes >= 120:  # 2+ hours
             return 3
-        elif duration_minutes >= 90:   # 1.5+ hours
+        elif duration_minutes >= 90:  # 1.5+ hours
             return 2
-        else:                          # < 1.5 hours
+        else:  # < 1.5 hours
             return 1
 
     def validate(self) -> List[ValidationError]:
@@ -153,27 +157,31 @@ class HolidayCalendar:
 
         # Validate ID
         if not self.id:
-            errors.append(ValidationError(
-                field="id",
-                expected_format="non-empty string",
-                actual_value=self.id
-            ))
+            errors.append(
+                ValidationError(
+                    field="id", expected_format="non-empty string", actual_value=self.id
+                )
+            )
 
         # Validate year
         if self.year < 2000 or self.year > 2100:
-            errors.append(ValidationError(
-                field="year",
-                expected_format="year between 2000 and 2100",
-                actual_value=self.year
-            ))
+            errors.append(
+                ValidationError(
+                    field="year",
+                    expected_format="year between 2000 and 2100",
+                    actual_value=self.year,
+                )
+            )
 
         # Validate holidays
         for holiday in self.holidays:
             if holiday.start_date > holiday.end_date:
-                errors.append(ValidationError(
-                    field=f"holiday_{holiday.name}",
-                    expected_format="start_date <= end_date",
-                    actual_value=f"{holiday.start_date} > {holiday.end_date}"
-                ))
+                errors.append(
+                    ValidationError(
+                        field=f"holiday_{holiday.name}",
+                        expected_format="start_date <= end_date",
+                        actual_value=f"{holiday.start_date} > {holiday.end_date}",
+                    )
+                )
 
         return errors

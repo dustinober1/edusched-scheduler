@@ -4,11 +4,10 @@ Provides event-driven architecture for schedule updates,
 conflict detection, and real-time notifications.
 """
 
-import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from edusched.api.websocket import manager
 
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class EventType(Enum):
     """Types of events in the system."""
+
     SCHEDULE_CREATED = "schedule_created"
     SCHEDULE_UPDATED = "schedule_updated"
     SCHEDULE_DELETED = "schedule_deleted"
@@ -172,9 +172,7 @@ class EventManager:
             listener: Event listener to remove
         """
         if event_type in self.listeners:
-            self.listeners[event_type] = [
-                l for l in self.listeners[event_type] if l != listener
-            ]
+            self.listeners[event_type] = [l for l in self.listeners[event_type] if l != listener]
 
     async def emit(self, event: Event):
         """Emit an event to all listeners.
@@ -250,8 +248,7 @@ class EventManager:
             "event_types": len(event_counts),
             "event_counts": event_counts,
             "active_listeners": {
-                event_type.value: len(listeners)
-                for event_type, listeners in self.listeners.items()
+                event_type.value: len(listeners) for event_type, listeners in self.listeners.items()
             },
             "global_listeners": len(self.global_listeners),
         }
@@ -284,9 +281,7 @@ async def emit_schedule_created(schedule_id: str, user_id: str, data: Dict[str, 
     await event_manager.emit(event)
 
 
-async def emit_schedule_updated(
-    schedule_id: str, user_id: str, changes: Dict[str, Any]
-):
+async def emit_schedule_updated(schedule_id: str, user_id: str, changes: Dict[str, Any]):
     """Emit schedule updated event.
 
     Args:
@@ -303,9 +298,7 @@ async def emit_schedule_updated(
     await event_manager.emit(event)
 
 
-async def emit_conflict_detected(
-    schedule_id: str, conflicts: List[Dict[str, Any]]
-):
+async def emit_conflict_detected(schedule_id: str, conflicts: List[Dict[str, Any]]):
     """Emit conflict detected event.
 
     Args:
@@ -315,6 +308,22 @@ async def emit_conflict_detected(
     event = Event(
         EventType.CONFLICT_DETECTED,
         {"conflicts": conflicts, "count": len(conflicts)},
+        schedule_id=schedule_id,
+    )
+    await event_manager.emit(event)
+
+
+async def emit_conflict_resolved(schedule_id: str, conflict_id: str, resolution: Dict[str, Any]):
+    """Emit conflict resolved event.
+
+    Args:
+        schedule_id: Schedule ID
+        conflict_id: ID of resolved conflict
+        resolution: Resolution details
+    """
+    event = Event(
+        EventType.CONFLICT_RESOLVED,
+        {"conflict_id": conflict_id, "resolution": resolution},
         schedule_id=schedule_id,
     )
     await event_manager.emit(event)
@@ -337,9 +346,7 @@ async def emit_solver_started(schedule_id: str, user_id: str, solver_config: Dic
     await event_manager.emit(event)
 
 
-async def emit_solver_progress(
-    schedule_id: str, user_id: str, progress: Dict[str, Any]
-):
+async def emit_solver_progress(schedule_id: str, user_id: str, progress: Dict[str, Any]):
     """Emit solver progress event.
 
     Args:
@@ -356,9 +363,7 @@ async def emit_solver_progress(
     await event_manager.emit(event)
 
 
-async def emit_solver_completed(
-    schedule_id: str, user_id: str, result: Dict[str, Any]
-):
+async def emit_solver_completed(schedule_id: str, user_id: str, result: Dict[str, Any]):
     """Emit solver completed event.
 
     Args:
@@ -391,5 +396,43 @@ async def emit_solver_failed(
         {"error": error, "details": details or {}},
         user_id=user_id,
         schedule_id=schedule_id,
+    )
+    await event_manager.emit(event)
+
+
+async def emit_data_imported(
+    user_id: str, data_type: str, count: int, details: Dict[str, Any] = None
+):
+    """Emit data imported event.
+
+    Args:
+        user_id: User ID who imported data
+        data_type: Type of data imported
+        count: Number of records imported
+        details: Additional import details
+    """
+    event = Event(
+        EventType.DATA_IMPORTED,
+        {"data_type": data_type, "count": count, "details": details or {}},
+        user_id=user_id,
+    )
+    await event_manager.emit(event)
+
+
+async def emit_data_exported(
+    user_id: str, data_type: str, format: str, details: Dict[str, Any] = None
+):
+    """Emit data exported event.
+
+    Args:
+        user_id: User ID who exported data
+        data_type: Type of data exported
+        format: Export format
+        details: Additional export details
+    """
+    event = Event(
+        EventType.DATA_EXPORTED,
+        {"data_type": data_type, "format": format, "details": details or {}},
+        user_id=user_id,
     )
     await event_manager.emit(event)

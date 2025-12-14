@@ -1,13 +1,11 @@
 """Instructor-specific constraints for course assignment and teaching."""
 
-from typing import TYPE_CHECKING, Optional, List
-from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Optional
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
 if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
-    from edusched.domain.teacher import Teacher
 
 
 class InstructorQualificationConstraint(Constraint):
@@ -45,7 +43,7 @@ class InstructorQualificationConstraint(Constraint):
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
-                message=f"Instructor {self.instructor_id} not qualified for {request.id}: {reason}"
+                message=f"Instructor {self.instructor_id} not qualified for {request.id}: {reason}",
             )
 
         return None
@@ -108,7 +106,7 @@ class ConcurrentTeachingConstraint(Constraint):
                     return Violation(
                         constraint_type=self.constraint_type,
                         affected_request_id=assignment.request_id,
-                        message=f"Instructor {self.instructor_id} scheduled to teach {existing_course} and {new_course} simultaneously"
+                        message=f"Instructor {self.instructor_id} scheduled to teach {existing_course} and {new_course} simultaneously",
                     )
 
         return None
@@ -130,8 +128,8 @@ class ConcurrentTeachingConstraint(Constraint):
 
         # Check time overlap
         return (
-            assignment1.start_time < assignment2.end_time and
-            assignment1.end_time > assignment2.start_time
+            assignment1.start_time < assignment2.end_time
+            and assignment1.end_time > assignment2.start_time
         )
 
     def explain(self, violation: Violation) -> str:
@@ -177,9 +175,10 @@ class InstructorSetupBufferConstraint(Constraint):
 
         # Get all assignments for this instructor on the same day
         instructor_assignments = [
-            a for a in solution
-            if self._is_instructor_assigned(a, self.instructor_id) and
-            a.start_time.date() == assignment.start_time.date()
+            a
+            for a in solution
+            if self._is_instructor_assigned(a, self.instructor_id)
+            and a.start_time.date() == assignment.start_time.date()
         ]
 
         # Check buffer requirements with other assignments
@@ -198,7 +197,7 @@ class InstructorSetupBufferConstraint(Constraint):
                         constraint_type=self.constraint_type,
                         affected_request_id=assignment.request_id,
                         message=f"Insufficient buffer between {existing.request_id} and {assignment.request_id}: "
-                               f"need {required_gap} minutes, have {gap:.0f} minutes"
+                        f"need {required_gap} minutes, have {gap:.0f} minutes",
                     )
 
             elif assignment.end_time < existing.start_time:
@@ -211,7 +210,7 @@ class InstructorSetupBufferConstraint(Constraint):
                         constraint_type=self.constraint_type,
                         affected_request_id=assignment.request_id,
                         message=f"Insufficient buffer between {assignment.request_id} and {existing.request_id}: "
-                               f"need {required_gap} minutes, have {gap:.0f} minutes"
+                        f"need {required_gap} minutes, have {gap:.0f} minutes",
                     )
 
         return None
@@ -258,8 +257,7 @@ class CourseConflictConstraint(Constraint):
 
         # Get all course IDs instructor is teaching
         teaching_courses = [
-            a.request_id for a in solution
-            if self._is_instructor_assigned(a, self.instructor_id)
+            a.request_id for a in solution if self._is_instructor_assigned(a, self.instructor_id)
         ]
 
         # Check for conflicts with new assignment
@@ -269,7 +267,7 @@ class CourseConflictConstraint(Constraint):
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=assignment.request_id,
-                    message=f"Course {assignment.request_id} conflicts with {conflict_course} for instructor {self.instructor_id}"
+                    message=f"Course {assignment.request_id} conflicts with {conflict_course} for instructor {self.instructor_id}",
                 )
 
         return None

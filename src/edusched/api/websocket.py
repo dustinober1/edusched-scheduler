@@ -7,7 +7,7 @@ conflict notifications, and collaborative editing.
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Set
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -58,11 +58,14 @@ class ConnectionManager:
         logger.info(f"WebSocket connected for user {user_id}, schedule {schedule_id}")
 
         # Send welcome message
-        await self.send_personal_message({
-            "type": "connected",
-            "message": "Successfully connected to EduSched real-time updates",
-            "timestamp": datetime.now().isoformat(),
-        }, websocket)
+        await self.send_personal_message(
+            {
+                "type": "connected",
+                "message": "Successfully connected to EduSched real-time updates",
+                "timestamp": datetime.now().isoformat(),
+            },
+            websocket,
+        )
 
     async def disconnect(self, websocket: "WebSocket", user_id: str):
         """Disconnect a WebSocket client.
@@ -291,11 +294,14 @@ async def websocket_endpoint(websocket: "WebSocket", user_id: str, schedule_id: 
                     manager.user_sessions[user_id]["schedule_id"] = new_schedule_id
 
                     # Send confirmation
-                    await manager.send_personal_message({
-                        "type": "subscription_updated",
-                        "schedule_id": new_schedule_id,
-                        "timestamp": datetime.now().isoformat(),
-                    }, websocket)
+                    await manager.send_personal_message(
+                        {
+                            "type": "subscription_updated",
+                            "schedule_id": new_schedule_id,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                        websocket,
+                    )
 
     except Exception as e:
         logger.error(f"WebSocket error for user {user_id}: {e}")

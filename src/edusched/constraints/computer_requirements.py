@@ -1,6 +1,6 @@
 """Custom constraint for computer room requirements."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
@@ -43,19 +43,14 @@ class ComputerRequirements(Constraint):
                 resource_computers = resource.attributes.get("computers")
 
                 # Handle different requirement patterns
-                violation = self._check_requirement(
-                    computer_req, resource_computers, resource.id
-                )
+                violation = self._check_requirement(computer_req, resource_computers, resource.id)
                 if violation:
                     return violation
 
         return None
 
     def _check_requirement(
-        self,
-        requirement: Any,
-        resource_computers: Any,
-        resource_id: str
+        self, requirement: Any, resource_computers: Any, resource_id: str
     ) -> Optional[Violation]:
         """Check if resource computers meet the requirement."""
         # Case 1: Explicitly no computers required
@@ -65,7 +60,7 @@ class ComputerRequirements(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_id,
-                    message=f"Room {resource_id} has computers but course requires no computers"
+                    message=f"Room {resource_id} has computers but course requires no computers",
                 )
             return None
 
@@ -76,7 +71,7 @@ class ComputerRequirements(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_id,
-                    message=f"Room {resource_id} has no computers but course requires at least {requirement['min_total']}"
+                    message=f"Room {resource_id} has no computers but course requires at least {requirement['min_total']}",
                 )
 
             total_computers = resource_computers.get("total", 0)
@@ -85,14 +80,16 @@ class ComputerRequirements(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_id,
-                    message=f"Room {resource_id} has {total_computers} computers but course requires at least {requirement['min_total']}"
+                    message=f"Room {resource_id} has {total_computers} computers but course requires at least {requirement['min_total']}",
                 )
 
         # Case 3: Specific type requirements (connected/standalone)
         for comp_type in ["connected", "standalone"]:
             if comp_type in requirement:
                 required = requirement[comp_type]
-                available = 0 if resource_computers is None else resource_computers.get(comp_type, 0)
+                available = (
+                    0 if resource_computers is None else resource_computers.get(comp_type, 0)
+                )
 
                 if isinstance(required, int):
                     if required > 0 and available < required:
@@ -100,14 +97,14 @@ class ComputerRequirements(Constraint):
                             constraint_type=self.constraint_type,
                             affected_request_id=self.request_id,
                             affected_resource_id=resource_id,
-                            message=f"Room {resource_id} has {available} {comp_type} computers but course requires {required}"
+                            message=f"Room {resource_id} has {available} {comp_type} computers but course requires {required}",
                         )
                 elif required == 0 and available > 0:
                     return Violation(
                         constraint_type=self.constraint_type,
                         affected_request_id=self.request_id,
                         affected_resource_id=resource_id,
-                        message=f"Room {resource_id} has {available} {comp_type} computers but course requires no {comp_type} computers"
+                        message=f"Room {resource_id} has {available} {comp_type} computers but course requires no {comp_type} computers",
                     )
 
         # Case 4: Minimum total computers
@@ -117,7 +114,7 @@ class ComputerRequirements(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_id,
-                    message=f"Room {resource_id} has no computers but course requires {requirement['total']} total"
+                    message=f"Room {resource_id} has no computers but course requires {requirement['total']} total",
                 )
 
             total_computers = resource_computers.get("total", 0)
@@ -126,7 +123,7 @@ class ComputerRequirements(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_id,
-                    message=f"Room {resource_id} has {total_computers} computers but course requires {requirement['total']}"
+                    message=f"Room {resource_id} has {total_computers} computers but course requires {requirement['total']}",
                 )
 
         return None
@@ -171,7 +168,7 @@ class AnyComputerAvailable(Constraint):
         return Violation(
             constraint_type=self.constraint_type,
             affected_request_id=self.request_id,
-            message=f"No room with at least {self.min_computers} computers assigned"
+            message=f"No room with at least {self.min_computers} computers assigned",
         )
 
     def explain(self, violation: Violation) -> str:
@@ -210,7 +207,7 @@ class NoComputerRoom(Constraint):
                             constraint_type=self.constraint_type,
                             affected_request_id=self.request_id,
                             affected_resource_id=resource_id,
-                            message=f"Room {resource_id} has {total} computers but course requires no computers"
+                            message=f"Room {resource_id} has {total} computers but course requires no computers",
                         )
 
         return None

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, List, Optional
 try:
     from ortools.sat.python import cp_model
     from ortools.util.python import solve_stats
+
     ORTOOLS_AVAILABLE = True
 except ImportError:
     ORTOOLS_AVAILABLE = False
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
     from edusched.domain.problem import Problem
     from edusched.domain.result import Result
-    from edusched.solvers.base import SolverBackend
 
 
 class ORToolsSolver:
@@ -32,9 +32,8 @@ class ORToolsSolver:
         """Initialize OR-Tools solver."""
         if not ORTOOLS_AVAILABLE:
             from edusched.errors import MissingOptionalDependency
-            raise MissingOptionalDependency(
-                "OR-Tools is not installed. Install with: pip install ortools"
-            )
+
+            raise MissingOptionalDependency("ortools", "pip install ortools")
 
         self.model = None
         self.solver = None
@@ -126,6 +125,7 @@ class ORToolsSolver:
                 return heuristic.solve(problem, seed=seed)
             else:
                 from edusched.errors import BackendError
+
                 raise BackendError(f"OR-Tools solver failed: {e}")
 
     def _create_variables(self, problem: "Problem"):
@@ -183,10 +183,7 @@ class ORToolsSolver:
         """Ensure each request is scheduled exactly once."""
         for req_idx, request in enumerate(problem.requests):
             # Collect all variables for this request
-            request_vars = [
-                var for (r_idx, _, _), var in assignments.items()
-                if r_idx == req_idx
-            ]
+            request_vars = [var for (r_idx, _, _), var in assignments.items() if r_idx == req_idx]
 
             if request_vars:
                 # Exactly one assignment per request
@@ -205,7 +202,9 @@ class ORToolsSolver:
                 resource_assignments[res_idx] = []
 
             request = problem.requests[req_idx]
-            start_time = self._get_possible_start_times(problem, request, problem.resources[res_idx])[start_idx]
+            start_time = self._get_possible_start_times(
+                problem, request, problem.resources[res_idx]
+            )[start_idx]
             end_time = start_time + request.duration
 
             resource_assignments[res_idx].append((start_time, end_time, var))
@@ -244,7 +243,7 @@ class ORToolsSolver:
             resource = problem.resources[res_idx]
 
             # Resource must have sufficient capacity
-            if hasattr(resource, 'capacity') and hasattr(request, 'enrollment'):
+            if hasattr(resource, "capacity") and hasattr(request, "enrollment"):
                 if resource.capacity < request.enrollment:
                     # This assignment is not feasible
                     self.model.Add(var == 0)
@@ -273,7 +272,7 @@ class ORToolsSolver:
         from datetime import datetime, timedelta
 
         # Use request's date range if available
-        if hasattr(request, 'start_date') and hasattr(request, 'end_date'):
+        if hasattr(request, "start_date") and hasattr(request, "end_date"):
             start = request.start_date
             end = request.end_date
         else:
@@ -294,10 +293,7 @@ class ORToolsSolver:
         return slots
 
     def _extract_solution(
-        self,
-        problem: "Problem",
-        assignments,
-        is_optimal: bool
+        self, problem: "Problem", assignments, is_optimal: bool
     ) -> List["Assignment"]:
         """Extract assignments from solver solution.
 

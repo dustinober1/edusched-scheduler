@@ -6,7 +6,6 @@ from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
 if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
-    from edusched.domain.holiday_calendar import HolidayCalendar
 
 
 class SchedulingPatternConstraint(Constraint):
@@ -42,7 +41,7 @@ class SchedulingPatternConstraint(Constraint):
                     message=(
                         f"Assignment {assignment.request_id} scheduled on weekend "
                         f"(no pattern specified, defaulting to Monday-Friday)"
-                    )
+                    ),
                 )
             return None
 
@@ -51,14 +50,22 @@ class SchedulingPatternConstraint(Constraint):
         day_of_week = assignment.start_time.weekday()
 
         if day_of_week not in pattern_days:
-            day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            day_names = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
                 message=(
                     f"Assignment {assignment.request_id} scheduled on {day_names[day_of_week]} "
                     f"which doesn't match pattern {request.scheduling_pattern}"
-                )
+                ),
             )
 
         return None
@@ -66,13 +73,13 @@ class SchedulingPatternConstraint(Constraint):
     def _get_pattern_days(self, pattern: str) -> list[int]:
         """Get allowed weekday numbers for a pattern."""
         patterns = {
-            "5days": [0, 1, 2, 3, 4],      # Mon-Fri
-            "4days_mt": [0, 1, 2, 3],       # Mon-Thu
-            "4days_tf": [1, 2, 3, 4],       # Tue-Fri
-            "3days_mw": [0, 1, 2],          # Mon-Wed
-            "3days_wf": [2, 3, 4],          # Wed-Fri
-            "2days_mt": [0, 1],              # Mon-Tue
-            "2days_tf": [3, 4],              # Thu-Fri
+            "5days": [0, 1, 2, 3, 4],  # Mon-Fri
+            "4days_mt": [0, 1, 2, 3],  # Mon-Thu
+            "4days_tf": [1, 2, 3, 4],  # Tue-Fri
+            "3days_mw": [0, 1, 2],  # Mon-Wed
+            "3days_wf": [2, 3, 4],  # Wed-Fri
+            "2days_mt": [0, 1],  # Mon-Tue
+            "2days_tf": [3, 4],  # Thu-Fri
         }
         return patterns.get(pattern, [0, 1, 2, 3, 4])  # Default to Mon-Fri
 
@@ -136,7 +143,7 @@ class HolidayAvoidanceConstraint(Constraint):
                     message=(
                         f"Assignment {assignment.request_id} scheduled during "
                         f"{holiday_name} ({holiday_start} to {holiday_end})"
-                    )
+                    ),
                 )
 
         return None
@@ -226,9 +233,7 @@ class OccurrenceSpreadConstraint(Constraint):
     ) -> Optional[Violation]:
         """Check if occurrences are properly spread out."""
         # Filter assignments for this request
-        request_assignments = [
-            a for a in solution if a.request_id == self.request_id
-        ]
+        request_assignments = [a for a in solution if a.request_id == self.request_id]
 
         if len(request_assignments) < 2:
             return None  # No spreading needed for single occurrence
@@ -250,7 +255,7 @@ class OccurrenceSpreadConstraint(Constraint):
                     message=(
                         f"Occurrences of {self.request_id} are too close together: "
                         f"{days_gap} days between classes (minimum: {self.min_days_between})"
-                    )
+                    ),
                 )
 
         return None

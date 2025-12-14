@@ -18,9 +18,7 @@ class InfeasibilityReport:
 
     def summary(self) -> str:
         """Generate human-readable summary of infeasibility."""
-        lines = [
-            f"Infeasible: {len(self.unscheduled_requests)} requests could not be scheduled"
-        ]
+        lines = [f"Infeasible: {len(self.unscheduled_requests)} requests could not be scheduled"]
         if self.violated_constraints_summary:
             lines.append("Violated constraints:")
             for constraint_type, count in self.violated_constraints_summary.items():

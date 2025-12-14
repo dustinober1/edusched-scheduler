@@ -11,6 +11,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.trustedhost import TrustedHostMiddleware
     from fastapi.responses import JSONResponse
+
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
@@ -20,7 +21,7 @@ from edusched.api import __version__
 # Only create app if FastAPI is available
 if FASTAPI_AVAILABLE:
     from edusched.api.dependencies import check_rate_limit
-    from edusched.api.routes import schedules, bulk_import
+    from edusched.api.routes import files, schedules
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -117,19 +118,14 @@ if FASTAPI_AVAILABLE:
         }
 
     # Include routers
+    from edusched.api.routes import conflicts, optimization
+
     app.include_router(
         schedules.router,
         prefix="/api/v1/schedules",
         tags=["schedules"],
     )
 
-    app.include_router(
-        bulk_import.router,
-        prefix="/api/v1",
-        tags=["bulk_import"],
-    )
-
-    from edusched.api.routes import conflicts, optimization, files
     app.include_router(
         conflicts.router,
         prefix="/api/v1/conflicts",
@@ -147,7 +143,8 @@ if FASTAPI_AVAILABLE:
     )
 
     # Add WebSocket endpoint
-    from fastapi import WebSocket, WebSocketDisconnect
+    from fastapi import WebSocket
+
     from edusched.api.websocket import websocket_endpoint
 
     @app.websocket("/ws")
@@ -193,14 +190,14 @@ def run_dev_server():
 
     import uvicorn
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("EduSched API Development Server")
-    print("="*50)
+    print("=" * 50)
     print(f"Version: {__version__}")
     print("API Documentation: http://localhost:8000/docs")
     print("ReDoc Documentation: http://localhost:8000/redoc")
     print("Health Check: http://localhost:8000/health")
-    print("="*50 + "\n")
+    print("=" * 50 + "\n")
 
     uvicorn.run(
         "edusched.api.main:app",

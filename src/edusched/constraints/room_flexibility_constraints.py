@@ -1,7 +1,6 @@
 """Flexible room usage constraints."""
 
-from typing import TYPE_CHECKING, Optional, List, Tuple
-from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Optional
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 from edusched.domain.resource import RoomType
@@ -52,17 +51,17 @@ class RoomTypeFlexibilityConstraint(Constraint):
                     constraint_type=self.constraint_type,
                     affected_request_id=assignment.request_id,
                     affected_resource_id=self.room_id,
-                    message=f"Room {self.room_id} cannot be used as {required_type.value}"
+                    message=f"Room {self.room_id} cannot be used as {required_type.value}",
                 )
 
         # Check capacity requirements
-        if hasattr(request, 'enrollment_count'):
+        if hasattr(request, "enrollment_count"):
             if not room.meets_capacity_for_type(required_type, request.enrollment_count):
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=assignment.request_id,
                     affected_resource_id=self.room_id,
-                    message=f"Room {self.room_id} capacity insufficient for {required_type.value} with {request.enrollment_count} students"
+                    message=f"Room {self.room_id} capacity insufficient for {required_type.value} with {request.enrollment_count} students",
                 )
 
         return None
@@ -70,36 +69,36 @@ class RoomTypeFlexibilityConstraint(Constraint):
     def _get_required_room_type(self, request) -> Optional[RoomType]:
         """Extract required room type from request."""
         # Check required_attributes for room type hints
-        if hasattr(request, 'required_attributes'):
+        if hasattr(request, "required_attributes"):
             attrs = request.required_attributes
 
             # Check for explicit room type requirement
-            if 'room_type' in attrs:
+            if "room_type" in attrs:
                 try:
-                    return RoomType(attrs['room_type'])
+                    return RoomType(attrs["room_type"])
                 except ValueError:
                     pass
 
             # Check for course type that implies room type
-            if 'course_type' in attrs:
-                course_type = attrs['course_type'].lower()
-                if course_type == 'lecture':
+            if "course_type" in attrs:
+                course_type = attrs["course_type"].lower()
+                if course_type == "lecture":
                     return RoomType.LECTURE_HALL
-                elif course_type == 'lab':
+                elif course_type == "lab":
                     return RoomType.COMPUTER_LAB
-                elif course_type == 'seminar':
+                elif course_type == "seminar":
                     return RoomType.SEMINAR_ROOM
-                elif course_type == 'conference':
+                elif course_type == "conference":
                     return RoomType.CONFERENCE_ROOM
-                elif course_type == 'breakout':
+                elif course_type == "breakout":
                     return RoomType.BREAKOUT_ROOM
 
         # Check request pattern or other attributes
-        if hasattr(request, 'scheduling_pattern'):
+        if hasattr(request, "scheduling_pattern"):
             pattern = request.scheduling_pattern
-            if 'seminar' in str(pattern).lower():
+            if "seminar" in str(pattern).lower():
                 return RoomType.SEMINAR_ROOM
-            elif 'lecture' in str(pattern).lower():
+            elif "lecture" in str(pattern).lower():
                 return RoomType.LECTURE_HALL
 
         return None
@@ -156,8 +155,7 @@ class RoomConversionConstraint(Constraint):
         # Check previous and next assignments for adequate buffer
         for existing in solution:
             if existing.assigned_resources and self.room_id in [
-                r for resources in existing.assigned_resources.values()
-                for r in resources
+                r for resources in existing.assigned_resources.values() for r in resources
             ]:
                 # Get the room type for existing assignment
                 existing_request = context.request_lookup.get(existing.request_id)
@@ -177,12 +175,16 @@ class RoomConversionConstraint(Constraint):
                     # Check if converting from existing type to current type needs time
                     if room.needs_conversion_for_type(current_type):
                         needs_conversion = True
-                        conversion_time = max(conversion_time, room.get_conversion_time(current_type))
+                        conversion_time = max(
+                            conversion_time, room.get_conversion_time(current_type)
+                        )
 
                     # Check if converting from current type to existing type needs time
                     if room.needs_conversion_for_type(existing_type):
                         needs_conversion = True
-                        conversion_time = max(conversion_time, room.get_conversion_time(existing_type))
+                        conversion_time = max(
+                            conversion_time, room.get_conversion_time(existing_type)
+                        )
 
                 # Check time before this assignment (existing is before current)
                 if existing.end_time <= assignment.start_time and needs_conversion:
@@ -193,7 +195,7 @@ class RoomConversionConstraint(Constraint):
                             affected_request_id=assignment.request_id,
                             affected_resource_id=self.room_id,
                             message=f"Room {self.room_id} needs {conversion_time} minutes for conversion from {existing_type.value} to {current_type.value}, "
-                                   f"only {buffer:.0f} minutes available"
+                            f"only {buffer:.0f} minutes available",
                         )
 
                 # Check time after this assignment (existing is after current)
@@ -205,32 +207,32 @@ class RoomConversionConstraint(Constraint):
                             affected_request_id=assignment.request_id,
                             affected_resource_id=self.room_id,
                             message=f"Room {self.room_id} needs {conversion_time} minutes for conversion from {current_type.value} to {existing_type.value}, "
-                                   f"only {buffer:.0f} minutes available"
+                            f"only {buffer:.0f} minutes available",
                         )
 
         return None
 
     def _get_required_room_type(self, request) -> Optional[RoomType]:
         """Extract required room type from request."""
-        if hasattr(request, 'required_attributes'):
+        if hasattr(request, "required_attributes"):
             attrs = request.required_attributes
-            if 'room_type' in attrs:
+            if "room_type" in attrs:
                 try:
-                    return RoomType(attrs['room_type'])
+                    return RoomType(attrs["room_type"])
                 except ValueError:
                     pass
 
-            if 'course_type' in attrs:
-                course_type = attrs['course_type'].lower()
-                if course_type == 'lecture':
+            if "course_type" in attrs:
+                course_type = attrs["course_type"].lower()
+                if course_type == "lecture":
                     return RoomType.LECTURE_HALL
-                elif course_type == 'lab':
+                elif course_type == "lab":
                     return RoomType.COMPUTER_LAB
-                elif course_type == 'seminar':
+                elif course_type == "seminar":
                     return RoomType.SEMINAR_ROOM
-                elif course_type == 'conference':
+                elif course_type == "conference":
                     return RoomType.CONFERENCE_ROOM
-                elif course_type == 'breakout':
+                elif course_type == "breakout":
                     return RoomType.BREAKOUT_ROOM
 
         return None
@@ -269,7 +271,7 @@ class RoomCapacityOptimizationConstraint(Constraint):
             return None
 
         request = context.request_lookup.get(assignment.request_id)
-        if not request or not hasattr(request, 'enrollment_count'):
+        if not request or not hasattr(request, "enrollment_count"):
             return None
 
         enrollment = request.enrollment_count

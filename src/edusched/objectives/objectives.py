@@ -1,6 +1,6 @@
 """Objective implementations."""
 
-from datetime import datetime, time
+from datetime import time
 from typing import TYPE_CHECKING, List
 
 from edusched.objectives.base import Objective
@@ -19,7 +19,6 @@ class SpreadEvenlyAcrossTerm(Objective):
 
         # Count sessions per day
         from collections import defaultdict
-        from datetime import date
 
         daily_counts = defaultdict(int)
         for assignment in solution:

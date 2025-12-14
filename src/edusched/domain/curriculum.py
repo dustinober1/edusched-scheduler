@@ -2,25 +2,27 @@
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional, Set, Tuple, Union
 from enum import Enum
+from typing import Dict, List, Optional, Set, Tuple
 
 from edusched.errors import ValidationError
 
 
 class RequirementType(Enum):
     """Types of academic requirements."""
-    CREDIT = "credit"                    # Total credits needed
-    COURSE = "course"                   # Specific course required
-    ELECTIVE = "elective"               # Choice from list
-    PREREQUISITE = "prerequisite"      # Must complete before
-    COREQUISITE = "corequisite"        # Must take simultaneously
-    GPA = "gpa"                        # Minimum GPA requirement
-    CONCENTRATION = "concentration"     # Specific track/concentration
+
+    CREDIT = "credit"  # Total credits needed
+    COURSE = "course"  # Specific course required
+    ELECTIVE = "elective"  # Choice from list
+    PREREQUISITE = "prerequisite"  # Must complete before
+    COREQUISITE = "corequisite"  # Must take simultaneously
+    GPA = "gpa"  # Minimum GPA requirement
+    CONCENTRATION = "concentration"  # Specific track/concentration
 
 
 class CourseType(Enum):
     """Types of courses."""
+
     LECTURE = "lecture"
     LAB = "lab"
     SEMINAR = "seminar"
@@ -37,6 +39,7 @@ class CourseType(Enum):
 @dataclass
 class CourseInfo:
     """Detailed course information for curriculum."""
+
     id: str
     title: str
     code: str  # e.g., CS401, MATH301
@@ -77,32 +80,34 @@ class CourseInfo:
         errors: List[ValidationError] = []
 
         if not self.id:
-            errors.append(ValidationError(
-                field="id",
-                expected_format="non-empty string",
-                actual_value=self.id
-            ))
+            errors.append(
+                ValidationError(
+                    field="id", expected_format="non-empty string", actual_value=self.id
+                )
+            )
 
         if not self.title:
-            errors.append(ValidationError(
-                field="title",
-                expected_format="non-empty string",
-                actual_value=self.title
-            ))
+            errors.append(
+                ValidationError(
+                    field="title", expected_format="non-empty string", actual_value=self.title
+                )
+            )
 
         if not self.code:
-            errors.append(ValidationError(
-                field="code",
-                expected_format="course code (e.g., CS401)",
-                actual_value=self.code
-            ))
+            errors.append(
+                ValidationError(
+                    field="code",
+                    expected_format="course code (e.g., CS401)",
+                    actual_value=self.code,
+                )
+            )
 
         if self.credits <= 0:
-            errors.append(ValidationError(
-                field="credits",
-                expected_format="positive number",
-                actual_value=self.credits
-            ))
+            errors.append(
+                ValidationError(
+                    field="credits", expected_format="positive number", actual_value=self.credits
+                )
+            )
 
         return errors
 
@@ -110,6 +115,7 @@ class CourseInfo:
 @dataclass
 class AcademicRequirement:
     """Represents an academic requirement for graduation."""
+
     id: str
     name: str
     requirement_type: RequirementType
@@ -139,6 +145,7 @@ class AcademicRequirement:
 @dataclass
 class Concentration:
     """A concentration or track within a major."""
+
     id: str
     name: str
     major_id: str
@@ -162,6 +169,7 @@ class Concentration:
 @dataclass
 class Major:
     """Academic major/degree program."""
+
     id: str
     name: str
     department_id: str
@@ -196,18 +204,20 @@ class Major:
         errors: List[ValidationError] = []
 
         if not self.id:
-            errors.append(ValidationError(
-                field="id",
-                expected_format="non-empty string",
-                actual_value=self.id
-            ))
+            errors.append(
+                ValidationError(
+                    field="id", expected_format="non-empty string", actual_value=self.id
+                )
+            )
 
         if self.major_credits_required > self.total_credits_required:
-            errors.append(ValidationError(
-                field="credits",
-                expected_format="major_credits <= total_credits",
-                actual_value=f"{self.major_credits_required} > {self.total_credits_required}"
-            ))
+            errors.append(
+                ValidationError(
+                    field="credits",
+                    expected_format="major_credits <= total_credits",
+                    actual_value=f"{self.major_credits_required} > {self.total_credits_required}",
+                )
+            )
 
         return errors
 
@@ -222,6 +232,7 @@ class Major:
 @dataclass
 class Curriculum:
     """Complete curriculum catalog for an institution."""
+
     institution_id: str
     academic_year: int
 
@@ -251,8 +262,9 @@ class Curriculum:
         """Get major by ID."""
         return self.majors.get(major_id)
 
-    def check_prerequisites(self, student_id: str, course_id: str,
-                           completed_courses: Set[str]) -> Tuple[bool, List[str]]:
+    def check_prerequisites(
+        self, student_id: str, course_id: str, completed_courses: Set[str]
+    ) -> Tuple[bool, List[str]]:
         """Check if student meets prerequisites for a course."""
         course = self.get_course(course_id)
         if not course:
@@ -281,9 +293,9 @@ class Curriculum:
         dfs(course_id)
         return sequence
 
-    def validate_student_progress(self, student_id: str, major_id: str,
-                               completed_courses: Dict[str, str],
-                               current_gpa: float) -> Dict:
+    def validate_student_progress(
+        self, student_id: str, major_id: str, completed_courses: Dict[str, str], current_gpa: float
+    ) -> Dict:
         """Validate student's progress toward major requirements."""
         major = self.get_major(major_id)
         if not major:
@@ -294,27 +306,27 @@ class Curriculum:
             "gpa": current_gpa,
             "gpa_status": "passing" if current_gpa >= major.minimum_cumulative_gpa else "failing",
             "completed_courses": len(completed_courses),
-            "requirements": []
+            "requirements": [],
         }
 
         # Check each requirement
         for requirement in major.requirements:
-            status = requirement.is_satisfied_by({
-                "completed_courses": completed_courses,
-                "gpa": current_gpa
-            })
-            report["requirements"].append({
-                "requirement": requirement.name,
-                "satisfied": status[0],
-                "details": status[1]
-            })
+            status = requirement.is_satisfied_by(
+                {"completed_courses": completed_courses, "gpa": current_gpa}
+            )
+            report["requirements"].append(
+                {"requirement": requirement.name, "satisfied": status[0], "details": status[1]}
+            )
 
         return report
 
-    def get_available_courses(self, student_id: str,
-                             completed_courses: Set[str],
-                             major_id: Optional[str] = None,
-                             semester: str = "fall") -> List[CourseInfo]:
+    def get_available_courses(
+        self,
+        student_id: str,
+        completed_courses: Set[str],
+        major_id: Optional[str] = None,
+        semester: str = "fall",
+    ) -> List[CourseInfo]:
         """Get courses student can register for based on prerequisites."""
         available = []
 

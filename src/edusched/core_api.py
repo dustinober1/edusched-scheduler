@@ -5,16 +5,17 @@ from typing import Optional
 
 from edusched.domain.problem import Problem
 from edusched.domain.result import Result
-from edusched.errors import BackendError, ValidationError, MissingOptionalDependency
+from edusched.errors import BackendError, MissingOptionalDependency, ValidationError
 
 # Import solver backends
 from edusched.solvers.heuristic import HeuristicSolver
 
 try:
     from edusched.solvers.ortools import ORToolsSolver
+
     ORTOOLS_AVAILABLE = True
 except ImportError:
-    ORTools_AVAILABLE = False
+    ORTOOLS_AVAILABLE = False
 
 
 def solve(
@@ -65,9 +66,7 @@ def solve(
         if ORTOOLS_AVAILABLE:
             solver = ORToolsSolver()
         else:
-            raise MissingOptionalDependency(
-                "OR-Tools backend is not available. Install with: pip install ortools"
-            )
+            raise MissingOptionalDependency("ortools", "pip install ortools")
     else:
         raise BackendError(f"Unknown backend: {backend}")
 

@@ -1,7 +1,7 @@
 """Utilities for scheduling with patterns and spreading occurrences."""
 
-from datetime import datetime, date, timedelta
-from typing import Dict, List, Optional, Tuple, Set
+from datetime import date, datetime, timedelta
+from typing import Dict, List, Optional, Set, Tuple
 from zoneinfo import ZoneInfo
 
 from edusched.domain.holiday_calendar import HolidayCalendar
@@ -15,9 +15,7 @@ class OccurrenceSpreader:
         self.holiday_calendar = holiday_calendar
 
     def generate_occurrence_dates(
-        self,
-        request: SessionRequest,
-        timezone: ZoneInfo = ZoneInfo("UTC")
+        self, request: SessionRequest, timezone: ZoneInfo = ZoneInfo("UTC")
     ) -> List[date]:
         """
         Generate optimal dates for class occurrences, spread throughout the term.
@@ -63,11 +61,7 @@ class OccurrenceSpreader:
         return "5days"
 
     def _get_pattern_dates_in_week(
-        self,
-        week_start: date,
-        week_end: date,
-        pattern_days: List[int],
-        avoid_holidays: bool
+        self, week_start: date, week_end: date, pattern_days: List[int], avoid_holidays: bool
     ) -> List[date]:
         """Get all valid dates in a week that match the pattern."""
         valid_dates = []
@@ -87,7 +81,7 @@ class OccurrenceSpreader:
         self,
         candidate_dates: List[date],
         request: SessionRequest,
-        academic_weeks: List[Tuple[date, date]]
+        academic_weeks: List[Tuple[date, date]],
     ) -> List[date]:
         """
         Select dates that are spread throughout the term.
@@ -110,10 +104,7 @@ class OccurrenceSpreader:
         # Group candidate dates by week
         dates_by_week: Dict[int, List[date]] = {}
         for i, (week_start, week_end) in enumerate(academic_weeks):
-            week_dates = [
-                d for d in candidate_dates
-                if week_start <= d <= week_end
-            ]
+            week_dates = [d for d in candidate_dates if week_start <= d <= week_end]
             dates_by_week[i] = week_dates
 
         selected_dates = []
@@ -126,9 +117,7 @@ class OccurrenceSpreader:
             if week_idx in dates_by_week and dates_by_week[week_idx]:
                 # Select one date from this week
                 selected_date = self._select_best_date_in_week(
-                    dates_by_week[week_idx],
-                    selected_dates,
-                    request
+                    dates_by_week[week_idx], selected_dates, request
                 )
                 if selected_date:
                     selected_dates.append(selected_date)
@@ -142,10 +131,7 @@ class OccurrenceSpreader:
             if week_idx not in used_weeks and week_idx in dates_by_week and dates_by_week[week_idx]:
                 # Try to add an extra occurrence to this week
                 selected_date = self._select_best_date_in_week(
-                    dates_by_week[week_idx],
-                    selected_dates,
-                    request,
-                    allow_consecutive=True
+                    dates_by_week[week_idx], selected_dates, request, allow_consecutive=True
                 )
                 if selected_date:
                     selected_dates.append(selected_date)
@@ -170,7 +156,7 @@ class OccurrenceSpreader:
         week_dates: List[date],
         selected_dates: List[date],
         request: SessionRequest,
-        allow_consecutive: bool = False
+        allow_consecutive: bool = False,
     ) -> Optional[date]:
         """Select the best date in a week based on spreading criteria."""
         if not week_dates:
@@ -211,7 +197,8 @@ class OccurrenceSpreader:
             # Respect max occurrences per week
             if request.max_occurrences_per_week:
                 occurrences_this_week = sum(
-                    1 for d in selected_dates
+                    1
+                    for d in selected_dates
                     if self._get_week_number(d) == self._get_week_number(candidate_date)
                 )
                 if occurrences_this_week < request.max_occurrences_per_week:
@@ -237,7 +224,7 @@ class OccurrenceSpreader:
         schedule_date: date,
         request: SessionRequest,
         calendar_granularity: timedelta,
-        timezone: ZoneInfo = ZoneInfo("UTC")
+        timezone: ZoneInfo = ZoneInfo("UTC"),
     ) -> List[Tuple[datetime, datetime]]:
         """
         Generate potential time slots for a given date.
@@ -253,13 +240,15 @@ class OccurrenceSpreader:
         """
         # Default time slots (9 AM to 5 PM)
         default_start_time = 9  # 9 AM
-        default_end_time = 17   # 5 PM
+        default_end_time = 17  # 5 PM
 
         slots = []
         current_hour = default_start_time
 
         while current_hour + (request.duration.total_seconds() / 3600) <= default_end_time:
-            start_time = datetime.combine(schedule_date, datetime.min.time(), tzinfo=timezone) + timedelta(hours=current_hour)
+            start_time = datetime.combine(
+                schedule_date, datetime.min.time(), tzinfo=timezone
+            ) + timedelta(hours=current_hour)
             end_time = start_time + request.duration
 
             # Check against preferred time slots
@@ -267,15 +256,14 @@ class OccurrenceSpreader:
                 slots.append((start_time, end_time))
 
             # Move to next possible time (accounting for duration)
-            current_hour = current_hour + int(request.duration.total_seconds() / 3600) + 1  # Add duration hours + 1 hour gap
+            current_hour = (
+                current_hour + int(request.duration.total_seconds() / 3600) + 1
+            )  # Add duration hours + 1 hour gap
 
         return slots
 
     def _is_preferred_time_slot(
-        self,
-        start_time: datetime,
-        end_time: datetime,
-        request: SessionRequest
+        self, start_time: datetime, end_time: datetime, request: SessionRequest
     ) -> bool:
         """Check if a time slot matches the request's preferences."""
         if not request.preferred_time_slots:
@@ -302,15 +290,13 @@ class OccurrenceSpreader:
             return 4
         elif duration_minutes >= 120:  # 2+ hours
             return 3
-        elif duration_minutes >= 90:   # 1.5+ hours
+        elif duration_minutes >= 90:  # 1.5+ hours
             return 2
-        else:                          # < 1.5 hours
+        else:  # < 1.5 hours
             return 1
 
     def sort_requests_by_priority(self, requests: List[SessionRequest]) -> List[SessionRequest]:
         """Sort requests by priority (longer classes first)."""
         return sorted(
-            requests,
-            key=lambda r: (self.calculate_priority_score(r), r.latest_date),
-            reverse=True
+            requests, key=lambda r: (self.calculate_priority_score(r), r.latest_date), reverse=True
         )

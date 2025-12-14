@@ -1,7 +1,6 @@
 """Constraints for day-specific resource requirements."""
 
 from typing import TYPE_CHECKING, List, Optional
-from datetime import datetime
 
 from edusched.constraints.base import Constraint, ConstraintContext, Violation
 
@@ -37,12 +36,20 @@ class DaySpecificResourceRequirement(Constraint):
             # Get required resource types for this day
             required_types = request.day_requirements.get(day_of_week, [])
             if required_types and resource_type not in required_types:
-                day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                day_names = [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday",
+                ]
                 return Violation(
                     constraint_type=self.constraint_type,
                     affected_request_id=self.request_id,
                     affected_resource_id=resource_ids[0] if resource_ids else None,
-                    message=f"Resource type '{resource_type}' not required on {day_names[day_of_week]} for session {self.request_id}"
+                    message=f"Resource type '{resource_type}' not required on {day_names[day_of_week]} for session {self.request_id}",
                 )
 
         return None

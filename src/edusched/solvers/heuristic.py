@@ -4,20 +4,17 @@ import random
 import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Dict, List, Optional, Set
+from zoneinfo import ZoneInfo
 
 from edusched.solvers.base import SolverBackend
 from edusched.utils.scheduling_utils import OccurrenceSpreader
-from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
-    from edusched.constraints.base import Constraint, ConstraintContext
+    from edusched.constraints.base import ConstraintContext
     from edusched.domain.assignment import Assignment
-    from edusched.domain.calendar import Calendar
     from edusched.domain.problem import Problem, ProblemIndices
-    from edusched.domain.resource import Resource
     from edusched.domain.result import Result
     from edusched.domain.session_request import SessionRequest
-    from edusched.errors import BackendError
 
 
 class HeuristicSolver(SolverBackend):
@@ -44,8 +41,7 @@ class HeuristicSolver(SolverBackend):
         Returns:
             Result object with scheduling solution
         """
-        from edusched.domain.assignment import Assignment
-        from edusched.domain.result import Result, InfeasibilityReport
+        from edusched.domain.result import Result
 
         start_time = time.time()
 
@@ -57,6 +53,7 @@ class HeuristicSolver(SolverBackend):
         errors = problem.validate()
         if errors:
             from edusched.errors import ValidationError
+
             raise ValidationError(f"Problem validation failed: {'; '.join(errors)}")
 
         # Canonicalize and build indices
@@ -69,12 +66,13 @@ class HeuristicSolver(SolverBackend):
         else:
             # Create default holiday calendar if none provided
             from edusched.domain.holiday_calendar import HolidayCalendar
+
             current_year = datetime.now().year
             default_calendar = HolidayCalendar(
                 id="default_academic",
                 name="Default Academic Calendar",
                 year=current_year,
-                excluded_weekdays={5, 6}  # Weekends
+                excluded_weekdays={5, 6},  # Weekends
             )
             self.spreader = OccurrenceSpreader(default_calendar)
 
@@ -89,9 +87,7 @@ class HeuristicSolver(SolverBackend):
         scheduled_requests: Set[str] = set(a.request_id for a in solution)
 
         # Sort requests by priority using new priority system (longer classes first)
-        requests_to_schedule = [
-            r for r in problem.requests if r.id not in scheduled_requests
-        ]
+        requests_to_schedule = [r for r in problem.requests if r.id not in scheduled_requests]
         requests_to_schedule = self.spreader.sort_requests_by_priority(requests_to_schedule)
 
         for request in requests_to_schedule:
@@ -117,9 +113,7 @@ class HeuristicSolver(SolverBackend):
         if unscheduled:
             if not fallback:
                 # Generate infeasibility report
-                diagnostics = self._generate_infeasibility_report(
-                    unscheduled, problem, context
-                )
+                diagnostics = self._generate_infeasibility_report(unscheduled, problem, context)
                 return Result(
                     status="infeasible" if len(unscheduled) == len(problem.requests) else "partial",
                     assignments=solution,
@@ -153,9 +147,7 @@ class HeuristicSolver(SolverBackend):
             solve_time_seconds=time.time() - start_time,
         )
 
-    def _create_context(
-        self, problem: "Problem", indices: "ProblemIndices"
-    ) -> "ConstraintContext":
+    def _create_context(self, problem: "Problem", indices: "ProblemIndices") -> "ConstraintContext":
         """Create constraint context for checking constraints."""
         from edusched.constraints.base import ConstraintContext
 
@@ -192,15 +184,14 @@ class HeuristicSolver(SolverBackend):
         # Generate spread-out occurrence dates if this is the first occurrence
         if occurrence_index == 0:
             schedule_dates = self.spreader.generate_occurrence_dates(
-                request,
-                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
+                request, calendar.timezone if hasattr(calendar, "timezone") else ZoneInfo("UTC")
             )
         else:
             # For subsequent occurrences, find the next available date
             schedule_dates = self._find_next_available_dates(
                 request,
                 solution,
-                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
+                calendar.timezone if hasattr(calendar, "timezone") else ZoneInfo("UTC"),
             )
 
         # Try each date in the preferred order (try more dates to handle conflicts)
@@ -210,7 +201,7 @@ class HeuristicSolver(SolverBackend):
                 schedule_date,
                 request,
                 granularity,
-                calendar.timezone if hasattr(calendar, 'timezone') else ZoneInfo("UTC")
+                calendar.timezone if hasattr(calendar, "timezone") else ZoneInfo("UTC"),
             )
 
             # Try each time slot
@@ -233,23 +224,16 @@ class HeuristicSolver(SolverBackend):
         return None
 
     def _find_next_available_dates(
-        self,
-        request: "SessionRequest",
-        solution: List["Assignment"],
-        timezone: ZoneInfo
+        self, request: "SessionRequest", solution: List["Assignment"], timezone: ZoneInfo
     ) -> List:
         """Find next available dates for additional occurrences."""
-        from datetime import date as date_type
 
         # Get existing assignments for this request
-        existing_dates = [
-            a.start_time.date() for a in solution if a.request_id == request.id
-        ]
+        existing_dates = [a.start_time.date() for a in solution if a.request_id == request.id]
 
         # Generate all possible dates within range
         all_dates = self.spreader.holiday_calendar.get_available_days_in_range(
-            request.earliest_date.date(),
-            request.latest_date.date()
+            request.earliest_date.date(), request.latest_date.date()
         )
 
         # Get allowed pattern days
@@ -258,8 +242,7 @@ class HeuristicSolver(SolverBackend):
 
         # Filter to only pattern-matching dates that aren't already used
         available_dates = [
-            d for d in all_dates
-            if d not in existing_dates and d.weekday() in pattern_days
+            d for d in all_dates if d not in existing_dates and d.weekday() in pattern_days
         ]
 
         # Sort to spread out from existing dates (prefer dates farther from already scheduled)
@@ -308,7 +291,7 @@ class HeuristicSolver(SolverBackend):
                             request.enrollment_count,
                             request.min_capacity or 0,
                             request.max_capacity,
-                            buffer_percent=0.1  # 10% buffer
+                            buffer_percent=0.1,  # 10% buffer
                         )
                         if not can_fit:
                             continue
@@ -320,13 +303,16 @@ class HeuristicSolver(SolverBackend):
                             continue
 
                     # Check if not already booked
-                    if self._is_resource_available(resource.id, assignment, context, current_solution):
+                    if self._is_resource_available(
+                        resource.id, assignment, context, current_solution
+                    ):
                         suitable_resources.append(resource)
 
             if suitable_resources:
                 # Sort by efficiency for classrooms (closest fit to required capacity)
                 if resource_type == "classroom" and request.modality != "online":
                     from edusched.utils.capacity_utils import calculate_efficiency_score
+
                     required_capacity = max(request.enrollment_count, request.min_capacity or 0)
                     required_with_buffer = int(required_capacity * 1.1)  # 10% buffer
 
@@ -334,9 +320,9 @@ class HeuristicSolver(SolverBackend):
                         key=lambda r: calculate_efficiency_score(
                             context.resource_lookup[r.id].capacity or 0,
                             required_with_buffer,
-                            request.max_capacity
+                            request.max_capacity,
                         ),
-                        reverse=True
+                        reverse=True,
                     )
 
                 # Assign the best resource
@@ -384,7 +370,9 @@ class HeuristicSolver(SolverBackend):
                     if existing.request_id != assignment.request_id:
                         existing_request = context.request_lookup.get(existing.request_id)
                         if existing_request and existing_request.teacher_id:
-                            existing_teacher = context.teacher_lookup.get(existing_request.teacher_id)
+                            existing_teacher = context.teacher_lookup.get(
+                                existing_request.teacher_id
+                            )
                             if existing_teacher:
                                 existing_setup = existing_teacher.setup_time_minutes
                                 existing_cleanup = existing_teacher.cleanup_time_minutes
@@ -417,13 +405,13 @@ class HeuristicSolver(SolverBackend):
         # Round up to next granularity boundary
         if granularity.total_seconds() > 0:
             # Calculate minutes since midnight
-            minutes_since_midnight = (
-                current.hour * 60 + current.minute + current.second / 60
-            )
+            minutes_since_midnight = current.hour * 60 + current.minute + current.second / 60
             granularity_minutes = granularity.total_seconds() / 60
 
             # Find next aligned time
-            next_minutes = ((minutes_since_midnight // granularity_minutes) + 1) * granularity_minutes
+            next_minutes = (
+                (minutes_since_midnight // granularity_minutes) + 1
+            ) * granularity_minutes
             next_hour = int(next_minutes // 60)
             next_minute = int(next_minutes % 60)
 
@@ -475,7 +463,7 @@ class HeuristicSolver(SolverBackend):
             },
             top_conflicts=[
                 f"Insufficient resources for {len(unscheduled)} requests",
-                f"Time window constraints too tight",
+                "Time window constraints too tight",
             ],
         )
 

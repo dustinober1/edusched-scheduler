@@ -40,7 +40,9 @@ class InfeasibilityError(Exception):
 class BackendError(Exception):
     """Raised when a solver backend encounters an error."""
 
-    def __init__(self, message: str, backend_name: Optional[str] = None, error_details: Optional[str] = None) -> None:
+    def __init__(
+        self, message: str, backend_name: Optional[str] = None, error_details: Optional[str] = None
+    ) -> None:
         if backend_name and error_details:
             # Backwards compatibility
             message = f"Backend '{backend_name}' error: {error_details}"
@@ -59,7 +61,6 @@ class MissingOptionalDependency(Exception):
         self.feature = feature
         self.install_command = install_command
         message = (
-            f"Feature '{feature}' requires optional dependencies. "
-            f"Install with: {install_command}"
+            f"Feature '{feature}' requires optional dependencies. Install with: {install_command}"
         )
         super().__init__(message)

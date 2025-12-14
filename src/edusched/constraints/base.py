@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from edusched.domain.assignment import Assignment
+    from edusched.domain.building import Building
     from edusched.domain.calendar import Calendar
+    from edusched.domain.department import Department
     from edusched.domain.problem import Problem
     from edusched.domain.resource import Resource
     from edusched.domain.session_request import SessionRequest
-    from edusched.domain.building import Building
-    from edusched.domain.department import Department
     from edusched.domain.teacher import Teacher
 
 

@@ -1,16 +1,14 @@
 """Conflict detection and resolution API routes."""
 
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from edusched.api.database import db
 from edusched.api.dependencies import get_active_user
 from edusched.api.events import emit_conflict_detected, emit_conflict_resolved
-from edusched.api.models import User, AssignmentModel
-from edusched.domain.result import Result
-from edusched.utils.data_import import DataImporter
+from edusched.api.models import User
 
 router = APIRouter()
 
@@ -199,19 +197,24 @@ def _check_resource_conflicts(assignments: List[Dict]) -> List[Dict]:
             booking_end = datetime.fromisoformat(booking["end_time"])
 
             if _time_overlaps(start_time, end_time, booking_start, booking_end):
-                conflicts.append({
-                    "id": f"resource_{resource_id}_{len(conflicts)}",
-                    "type": "resource_conflict",
-                    "severity": "high",
-                    "resource_id": resource_id,
-                    "resource_name": assignment.get("room_name", "Unknown"),
-                    "conflicting_assignments": [booking["request_id"], assignment["request_id"]],
-                    "time_overlap": {
-                        "start": max(start_time, booking_start).isoformat(),
-                        "end": min(end_time, booking_end).isoformat(),
-                    },
-                    "description": f"Room {assignment.get('room_name', resource_id)} is double booked",
-                })
+                conflicts.append(
+                    {
+                        "id": f"resource_{resource_id}_{len(conflicts)}",
+                        "type": "resource_conflict",
+                        "severity": "high",
+                        "resource_id": resource_id,
+                        "resource_name": assignment.get("room_name", "Unknown"),
+                        "conflicting_assignments": [
+                            booking["request_id"],
+                            assignment["request_id"],
+                        ],
+                        "time_overlap": {
+                            "start": max(start_time, booking_start).isoformat(),
+                            "end": min(end_time, booking_end).isoformat(),
+                        },
+                        "description": f"Room {assignment.get('room_name', resource_id)} is double booked",
+                    }
+                )
 
         resource_bookings[resource_id].append(assignment)
 
@@ -241,19 +244,24 @@ def _check_teacher_conflicts(assignments: List[Dict]) -> List[Dict]:
             booking_end = datetime.fromisoformat(booking["end_time"])
 
             if _time_overlaps(start_time, end_time, booking_start, booking_end):
-                conflicts.append({
-                    "id": f"teacher_{teacher_id}_{len(conflicts)}",
-                    "type": "teacher_conflict",
-                    "severity": "high",
-                    "teacher_id": teacher_id,
-                    "teacher_name": assignment.get("teacher_name", "Unknown"),
-                    "conflicting_assignments": [booking["request_id"], assignment["request_id"]],
-                    "time_overlap": {
-                        "start": max(start_time, booking_start).isoformat(),
-                        "end": min(end_time, booking_end).isoformat(),
-                    },
-                    "description": f"Teacher {assignment.get('teacher_name', teacher_id)} is scheduled for overlapping classes",
-                })
+                conflicts.append(
+                    {
+                        "id": f"teacher_{teacher_id}_{len(conflicts)}",
+                        "type": "teacher_conflict",
+                        "severity": "high",
+                        "teacher_id": teacher_id,
+                        "teacher_name": assignment.get("teacher_name", "Unknown"),
+                        "conflicting_assignments": [
+                            booking["request_id"],
+                            assignment["request_id"],
+                        ],
+                        "time_overlap": {
+                            "start": max(start_time, booking_start).isoformat(),
+                            "end": min(end_time, booking_end).isoformat(),
+                        },
+                        "description": f"Teacher {assignment.get('teacher_name', teacher_id)} is scheduled for overlapping classes",
+                    }
+                )
 
         teacher_bookings[teacher_id].append(assignment)
 
@@ -276,18 +284,20 @@ def _check_capacity_conflicts(assignments: List[Dict]) -> List[Dict]:
         capacity = assignment.get("capacity", 0)
 
         if enrollment > capacity:
-            conflicts.append({
-                "id": f"capacity_{assignment['request_id']}",
-                "type": "capacity_violation",
-                "severity": "medium",
-                "request_id": assignment["request_id"],
-                "resource_id": assignment["resource_id"],
-                "room_name": assignment.get("room_name", "Unknown"),
-                "enrollment": enrollment,
-                "capacity": capacity,
-                "over_capacity": enrollment - capacity,
-                "description": f"Room capacity ({capacity}) exceeded by enrollment ({enrollment})",
-            })
+            conflicts.append(
+                {
+                    "id": f"capacity_{assignment['request_id']}",
+                    "type": "capacity_violation",
+                    "severity": "medium",
+                    "request_id": assignment["request_id"],
+                    "resource_id": assignment["resource_id"],
+                    "room_name": assignment.get("room_name", "Unknown"),
+                    "enrollment": enrollment,
+                    "capacity": capacity,
+                    "over_capacity": enrollment - capacity,
+                    "description": f"Room capacity ({capacity}) exceeded by enrollment ({enrollment})",
+                }
+            )
 
     return conflicts
 

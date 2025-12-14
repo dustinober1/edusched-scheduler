@@ -1,13 +1,14 @@
 """Resource domain model."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
-from datetime import datetime, timedelta, date
+from datetime import date, datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class ResourceStatus(Enum):
     """Resource availability status."""
+
     AVAILABLE = "available"
     OCCUPIED = "occupied"
     MAINTENANCE = "maintenance"
@@ -17,6 +18,7 @@ class ResourceStatus(Enum):
 
 class RoomType(Enum):
     """Specific room types with special requirements."""
+
     CLASSROOM_STANDARD = "classroom_standard"
     CLASSROOM_TIER1 = "classroom_tier1"  # Tech-enabled
     CLASSROOM_TIER2 = "classroom_tier2"  # Basic tech
@@ -39,6 +41,7 @@ class RoomType(Enum):
 @dataclass
 class Equipment:
     """Equipment associated with a resource."""
+
     id: str
     name: str
     type: str  # projector, computer, lab_equipment, etc.
@@ -51,6 +54,7 @@ class Equipment:
 @dataclass
 class MaintenanceWindow:
     """Scheduled maintenance window for a resource."""
+
     start_time: datetime
     end_time: datetime
     reason: str
@@ -62,6 +66,7 @@ class MaintenanceWindow:
 @dataclass
 class BlackoutPeriod:
     """Blackout period when a resource is completely unavailable."""
+
     start_date: date
     end_date: date
     reason: str
@@ -103,8 +108,8 @@ class Resource:
     attributes: Dict[str, Any] = field(default_factory=dict)
     availability_calendar_id: Optional[str] = None
     building_id: Optional[str] = None  # Reference to building if applicable
-    floor_number: Optional[int] = None   # Floor within the building
-    capacity: Optional[int] = None        # Physical capacity (seats, etc.)
+    floor_number: Optional[int] = None  # Floor within the building
+    capacity: Optional[int] = None  # Physical capacity (seats, etc.)
 
     # Advanced room features
     equipment: List[Equipment] = field(default_factory=list)
@@ -148,18 +153,34 @@ class Resource:
 
     # Blackout periods (building-wide or room-specific)
     blackout_periods: List[BlackoutPeriod] = field(default_factory=list)
-    building_blackouts: List[BlackoutPeriod] = field(default_factory=list)  # Inherited from building
+    building_blackouts: List[BlackoutPeriod] = field(
+        default_factory=list
+    )  # Inherited from building
 
     # Flexible room usage
-    can_be_used_as: Set[RoomType] = field(default_factory=set)  # Alternative room types this room can serve as
-    fallback_priority: Dict[RoomType, int] = field(default_factory=dict)  # Priority when used as fallback (1=highest)
-    min_capacity_for_alt_use: Optional[Dict[RoomType, int]] = None  # Min capacity needed for alternative use
-    requires_conversion: Set[RoomType] = field(default_factory=set)  # Room types that need setup changes
-    conversion_time_minutes: Dict[RoomType, int] = field(default_factory=dict)  # Time needed to convert
+    can_be_used_as: Set[RoomType] = field(
+        default_factory=set
+    )  # Alternative room types this room can serve as
+    fallback_priority: Dict[RoomType, int] = field(
+        default_factory=dict
+    )  # Priority when used as fallback (1=highest)
+    min_capacity_for_alt_use: Optional[Dict[RoomType, int]] = (
+        None  # Min capacity needed for alternative use
+    )
+    requires_conversion: Set[RoomType] = field(
+        default_factory=set
+    )  # Room types that need setup changes
+    conversion_time_minutes: Dict[RoomType, int] = field(
+        default_factory=dict
+    )  # Time needed to convert
 
     # Room usage tracking
-    primary_usage_count: Dict[str, int] = field(default_factory=dict)  # Count of times used as primary type
-    fallback_usage_count: Dict[str, int] = field(default_factory=dict)  # Count of times used as fallback
+    primary_usage_count: Dict[str, int] = field(
+        default_factory=dict
+    )  # Count of times used as primary type
+    fallback_usage_count: Dict[str, int] = field(
+        default_factory=dict
+    )  # Count of times used as fallback
 
     # Cost and billing
     hourly_rate: Optional[float] = None
@@ -188,18 +209,22 @@ class Resource:
 
         # Check room-specific blackouts
         for blackout in self.blackout_periods:
-            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+            if blackout.affects_date(check_date) and blackout.affects_resource(
+                self.id, self.room_type
+            ):
                 return False, f"Room blackout: {blackout.reason}"
 
         # Check building-wide blackouts
         for blackout in self.building_blackouts:
-            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+            if blackout.affects_date(check_date) and blackout.affects_resource(
+                self.id, self.room_type
+            ):
                 return False, f"Building blackout: {blackout.reason}"
 
         # Check maintenance windows
         for maintenance in self.maintenance_windows:
             if maintenance.affects_availability:
-                if (start_time < maintenance.end_time and end_time > maintenance.start_time):
+                if start_time < maintenance.end_time and end_time > maintenance.start_time:
                     return False, f"Maintenance scheduled: {maintenance.reason}"
 
         # Check booking duration constraints
@@ -232,8 +257,12 @@ class Resource:
 
         # Check room type compatibility
         if self.room_type:
-            if course_type == "lab" and self.room_type not in [RoomType.COMPUTER_LAB, RoomType.SCIENCE_LAB,
-                                                           RoomType.ENGINEERING_LAB, RoomType.CLINICAL_ROOM]:
+            if course_type == "lab" and self.room_type not in [
+                RoomType.COMPUTER_LAB,
+                RoomType.SCIENCE_LAB,
+                RoomType.ENGINEERING_LAB,
+                RoomType.CLINICAL_ROOM,
+            ]:
                 return False
             if course_type == "lecture" and self.room_type == RoomType.STUDY_ROOM:
                 return False
@@ -306,41 +335,35 @@ class Resource:
         Returns:
             True if all requirements are satisfied, False otherwise
         """
-        # Special keys that are handled separately
-        special_keys = {"capacity", "equipment", "accessibility", "technical_features"}
-
-        # Check basic attributes
+        # Check basic attributes first
         for key, required_value in requirements.items():
-            if key in special_keys:
-                continue
-
-            if key not in self.attributes:
-                return False
-            
-            if self.attributes[key] != required_value:
-                return False
-
-        # Check capacity requirement
-        if "capacity" in requirements:
-            resource_capacity = self.capacity if self.capacity is not None else self.attributes.get("capacity")
-            if resource_capacity is None or resource_capacity < requirements["capacity"]:
-                return False
-
-        # Check equipment requirements
-        if "equipment" in requirements:
-            for eq_type, count in requirements["equipment"].items():
-                if self.get_equipment_count(eq_type) < count:
+            # Special handling for dict-typed requirements in specific keys
+            if key == "capacity" and isinstance(required_value, (int, float)):
+                # Check capacity as a numeric comparison
+                resource_capacity = (
+                    self.capacity if self.capacity is not None else self.attributes.get("capacity")
+                )
+                if resource_capacity is None or resource_capacity < required_value:
                     return False
-
-        # Check accessibility requirements
-        if "accessibility" in requirements:
-            if not self.meets_accessibility_requirements(requirements["accessibility"]):
-                return False
-
-        # Check technical features
-        if "technical_features" in requirements:
-            for feature, required in requirements["technical_features"].items():
-                if required and not getattr(self, f"has_{feature}", False):
+            elif key == "equipment" and isinstance(required_value, dict):
+                # Check equipment as a dict of type: count
+                for eq_type, count in required_value.items():
+                    if isinstance(count, (int, float)) and self.get_equipment_count(eq_type) < count:
+                        return False
+            elif key == "accessibility" and isinstance(required_value, dict):
+                # Check accessibility requirements
+                if not self.meets_accessibility_requirements(required_value):
+                    return False
+            elif key == "technical_features" and isinstance(required_value, dict):
+                # Check technical features
+                for feature, required in required_value.items():
+                    if required and not getattr(self, f"has_{feature}", False):
+                        return False
+            else:
+                # Regular attribute matching
+                if key not in self.attributes:
+                    return False
+                if self.attributes[key] != required_value:
                     return False
 
         return True
@@ -353,24 +376,47 @@ class Resource:
             List of validation errors (empty if valid)
         """
         from edusched.errors import ValidationError
+
         errors: List[ValidationError] = []
 
         if not self.id:
-            errors.append(ValidationError(field="id", expected_format="non-empty string", actual_value=self.id))
+            errors.append(
+                ValidationError(
+                    field="id", expected_format="non-empty string", actual_value=self.id
+                )
+            )
 
         valid_types = ["room", "instructor", "equipment", "campus", "online_slot"]
         if self.resource_type not in valid_types:
-            errors.append(ValidationError(field="resource_type", expected_format=f"one of {valid_types}", actual_value=self.resource_type))
+            errors.append(
+                ValidationError(
+                    field="resource_type",
+                    expected_format=f"one of {valid_types}",
+                    actual_value=self.resource_type,
+                )
+            )
 
         if self.capacity is not None and self.capacity < 0:
-            errors.append(ValidationError(field="capacity", expected_format="non-negative integer", actual_value=self.capacity))
-        
+            errors.append(
+                ValidationError(
+                    field="capacity",
+                    expected_format="non-negative integer",
+                    actual_value=self.capacity,
+                )
+            )
+
         # Validate attribute types
         valid_attr_types = (str, int, list, dict, bool, type(None))
         # Note: float is intentionally excluded based on test requirements
         for key, value in self.attributes.items():
-             if not isinstance(value, valid_attr_types):
-                 errors.append(ValidationError(field="attributes", expected_format=f"valid types {valid_attr_types} for key '{key}'", actual_value=type(value)))
+            if not isinstance(value, valid_attr_types):
+                errors.append(
+                    ValidationError(
+                        field="attributes",
+                        expected_format=f"valid types {valid_attr_types} for key '{key}'",
+                        actual_value=type(value),
+                    )
+                )
 
         return errors
 
@@ -403,10 +449,13 @@ class Resource:
                 return True
         return False
 
-    def get_blackout_periods_in_range(self, start_date: date, end_date: date) -> List[BlackoutPeriod]:
+    def get_blackout_periods_in_range(
+        self, start_date: date, end_date: date
+    ) -> List[BlackoutPeriod]:
         """Get all blackout periods within a date range."""
         return [
-            blackout for blackout in self.blackout_periods
+            blackout
+            for blackout in self.blackout_periods
             if blackout.start_date <= end_date and blackout.end_date >= start_date
         ]
 
@@ -419,12 +468,16 @@ class Resource:
         """
         # Check room-specific blackouts
         for blackout in self.blackout_periods:
-            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+            if blackout.affects_date(check_date) and blackout.affects_resource(
+                self.id, self.room_type
+            ):
                 return True, blackout.reason
 
         # Check building-wide blackouts
         for blackout in self.building_blackouts:
-            if blackout.affects_date(check_date) and blackout.affects_resource(self.id, self.room_type):
+            if blackout.affects_date(check_date) and blackout.affects_resource(
+                self.id, self.room_type
+            ):
                 return True, blackout.reason
 
         return False, None
@@ -511,7 +564,9 @@ class Resource:
         """
         return self.conversion_time_minutes.get(target_type, 0)
 
-    def record_usage(self, used_as_type: Optional[RoomType] = None, is_fallback: bool = False) -> None:
+    def record_usage(
+        self, used_as_type: Optional[RoomType] = None, is_fallback: bool = False
+    ) -> None:
         """
         Record usage of the room for analytics.
 
@@ -545,7 +600,7 @@ class Resource:
             "fallback_uses": total_fallback,
             "primary_by_type": self.primary_usage_count.copy(),
             "fallback_by_type": self.fallback_usage_count.copy(),
-            "fallback_percentage": (total_fallback / max(total_primary + total_fallback, 1)) * 100
+            "fallback_percentage": (total_fallback / max(total_primary + total_fallback, 1)) * 100,
         }
 
     def add_fallback_capability(
@@ -554,7 +609,7 @@ class Resource:
         priority: int = 10,
         min_capacity: Optional[int] = None,
         conversion_time: Optional[int] = None,
-        requires_conversion: bool = False
+        requires_conversion: bool = False,
     ) -> None:
         """
         Add capability for this room to be used as a fallback.

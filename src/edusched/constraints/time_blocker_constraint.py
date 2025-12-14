@@ -34,7 +34,7 @@ class TimeBlockerConstraint(Constraint):
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
-                message=f"Class start time conflicts with {block_name}"
+                message=f"Class start time conflicts with {block_name}",
             )
 
         is_end_blocked, block_name = self.time_blocker.is_time_blocked(assignment.end_time)
@@ -42,7 +42,7 @@ class TimeBlockerConstraint(Constraint):
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
-                message=f"Class end time conflicts with {block_name}"
+                message=f"Class end time conflicts with {block_name}",
             )
 
         # Check if the class duration spans through a blocked period
@@ -55,7 +55,7 @@ class TimeBlockerConstraint(Constraint):
             return Violation(
                 constraint_type=self.constraint_type,
                 affected_request_id=assignment.request_id,
-                message=f"Class spans through {block_name}"
+                message=f"Class spans through {block_name}",
             )
 
         return None

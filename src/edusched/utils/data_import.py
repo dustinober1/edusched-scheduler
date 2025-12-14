@@ -2,13 +2,13 @@
 
 import csv
 import json
-from datetime import datetime, time
-from io import StringIO
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 try:
     import pandas as pd
+
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
@@ -20,11 +20,11 @@ from edusched.domain.department import Department
 from edusched.domain.resource import Resource
 from edusched.domain.session_request import SessionRequest
 from edusched.domain.teacher import Teacher
-from edusched.errors import ValidationError
 
 
 class DataImportError(Exception):
     """Raised when data import fails."""
+
     pass
 
 
@@ -36,7 +36,7 @@ class DataImporter:
             "csv": self._import_csv,
             "json": self._import_json,
             "xlsx": self._import_excel if PANDAS_AVAILABLE else self._fallback_excel,
-            "xls": self._import_excel if PANDAS_AVAILABLE else self._fallback_excel
+            "xls": self._import_excel if PANDAS_AVAILABLE else self._fallback_excel,
         }
 
     def import_file(self, file_path: Union[str, Path], data_type: str) -> List[Any]:
@@ -58,7 +58,7 @@ class DataImporter:
         if not file_path.exists():
             raise DataImportError(f"File not found: {file_path}")
 
-        file_ext = file_path.suffix.lower().lstrip('.')
+        file_ext = file_path.suffix.lower().lstrip(".")
         if file_ext not in self.importers:
             raise DataImportError(f"Unsupported file format: {file_ext}")
 
@@ -70,13 +70,13 @@ class DataImporter:
 
     def _import_csv(self, file_path: Path) -> List[Dict[str, Any]]:
         """Import data from CSV file."""
-        with open(file_path, 'r', encoding='utf-8-sig') as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             return [row for row in reader]
 
     def _import_json(self, file_path: Path) -> List[Dict[str, Any]]:
         """Import data from JSON file."""
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         if isinstance(data, list):
@@ -91,7 +91,7 @@ class DataImporter:
         df = pd.read_excel(file_path)
         # Replace NaN with None
         df = df.where(pd.notnull(df), None)
-        return df.to_dict('records')
+        return df.to_dict("records")
 
     def _fallback_excel(self, file_path: Path) -> List[Dict[str, Any]]:
         """Fallback Excel import without pandas."""
@@ -107,7 +107,7 @@ class DataImporter:
             "teachers": self._process_teachers,
             "departments": self._process_departments,
             "courses": self._process_courses,
-            "calendars": self._process_calendars
+            "calendars": self._process_calendars,
         }
 
         if data_type not in processors:
@@ -145,11 +145,13 @@ class DataImporter:
                     address=str(row.get("address", "")),
                     coordinates=coordinates,
                     campus_area=row.get("campus_area"),
-                    amenities=self._parse_list_field(row.get("amenities"))
+                    amenities=self._parse_list_field(row.get("amenities")),
                 )
                 buildings.append(building)
             except Exception as e:
-                raise DataImportError(f"Error processing building {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing building {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return buildings
 
@@ -165,11 +167,13 @@ class DataImporter:
                     building_id=row.get("building_id"),
                     floor_number=int(row["floor_number"]) if row.get("floor_number") else None,
                     attributes=self._parse_attributes(row.get("attributes")),
-                    availability_calendar_id=row.get("availability_calendar_id")
+                    availability_calendar_id=row.get("availability_calendar_id"),
                 )
                 resources.append(resource)
             except Exception as e:
-                raise DataImportError(f"Error processing resource {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing resource {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return resources
 
@@ -188,16 +192,26 @@ class DataImporter:
                     availability_calendar_id=row.get("availability_calendar_id"),
                     preferred_days=self._parse_list_field(row.get("preferred_days")),
                     preferred_times=self._parse_dict_field(row.get("preferred_times")),
-                    max_consecutive_hours=int(row["max_consecutive_hours"]) if row.get("max_consecutive_hours") else None,
-                    max_daily_hours=int(row["max_daily_hours"]) if row.get("max_daily_hours") else None,
-                    max_weekly_hours=int(row["max_weekly_hours"]) if row.get("max_weekly_hours") else None,
+                    max_consecutive_hours=int(row["max_consecutive_hours"])
+                    if row.get("max_consecutive_hours")
+                    else None,
+                    max_daily_hours=int(row["max_daily_hours"])
+                    if row.get("max_daily_hours")
+                    else None,
+                    max_weekly_hours=int(row["max_weekly_hours"])
+                    if row.get("max_weekly_hours")
+                    else None,
                     preferred_buildings=self._parse_list_field(row.get("preferred_buildings")),
                     preferred_room_types=self._parse_list_field(row.get("preferred_room_types")),
-                    max_class_size=int(row["max_class_size"]) if row.get("max_class_size") else None
+                    max_class_size=int(row["max_class_size"])
+                    if row.get("max_class_size")
+                    else None,
                 )
                 teachers.append(teacher)
             except Exception as e:
-                raise DataImportError(f"Error processing teacher {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing teacher {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return teachers
 
@@ -217,11 +231,13 @@ class DataImporter:
                     preferred_times=self._parse_dict_field(row.get("preferred_times")),
                     blacked_out_days=self._parse_list_field(row.get("blacked_out_days")),
                     preferred_room_types=self._parse_list_field(row.get("preferred_room_types")),
-                    required_amenities=self._parse_list_field(row.get("required_amenities"))
+                    required_amenities=self._parse_list_field(row.get("required_amenities")),
                 )
                 departments.append(department)
             except Exception as e:
-                raise DataImportError(f"Error processing department {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing department {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return departments
 
@@ -245,7 +261,9 @@ class DataImporter:
                 # Parse additional teachers
                 additional_teachers = None
                 if row.get("additional_teachers"):
-                    additional_teachers = [t.strip() for t in str(row["additional_teachers"]).split(",") if t.strip()]
+                    additional_teachers = [
+                        t.strip() for t in str(row["additional_teachers"]).split(",") if t.strip()
+                    ]
 
                 course = SessionRequest(
                     id=str(row["id"]),
@@ -263,12 +281,16 @@ class DataImporter:
                     additional_teachers=additional_teachers,
                     preferred_building_id=row.get("preferred_building_id"),
                     required_building_id=row.get("required_building_id"),
-                    required_resource_types=self._parse_dict_field(row.get("required_resource_types")),
-                    day_requirements=self._parse_dict_field(row.get("day_requirements"))
+                    required_resource_types=self._parse_dict_field(
+                        row.get("required_resource_types")
+                    ),
+                    day_requirements=self._parse_dict_field(row.get("day_requirements")),
                 )
                 courses.append(course)
             except Exception as e:
-                raise DataImportError(f"Error processing course {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing course {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return courses
 
@@ -285,13 +307,13 @@ class DataImporter:
                 granularity = timedelta(minutes=granularity_minutes)
 
                 calendar = Calendar(
-                    id=str(row["id"]),
-                    timezone=timezone,
-                    timeslot_granularity=granularity
+                    id=str(row["id"]), timezone=timezone, timeslot_granularity=granularity
                 )
                 calendars.append(calendar)
             except Exception as e:
-                raise DataImportError(f"Error processing calendar {row.get('id', 'unknown')}: {str(e)}")
+                raise DataImportError(
+                    f"Error processing calendar {row.get('id', 'unknown')}: {str(e)}"
+                )
 
         return calendars
 
@@ -358,7 +380,7 @@ class DataImporter:
             "%Y-%m-%d",
             "%m/%d/%Y %H:%M:%S",
             "%m/%d/%Y %H:%M",
-            "%m/%d/%Y"
+            "%m/%d/%Y",
         ]
 
         for fmt in formats:
@@ -377,29 +399,96 @@ def create_sample_csv_files(output_dir: Union[str, Path]):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Sample buildings CSV
-    buildings_header = ["id", "name", "building_type", "address", "coordinates", "campus_area", "amenities"]
+    buildings_header = [
+        "id",
+        "name",
+        "building_type",
+        "address",
+        "coordinates",
+        "campus_area",
+        "amenities",
+    ]
     buildings_data = [
-        ["tech_building", "Technology Building", "ACADEMIC", "123 Tech St", "40.7128,-74.0060", "North Campus", "WiFi,Projector,Whiteboard"],
-        ["lib_building", "University Library", "LIBRARY", "456 Library Way", "40.7130,-74.0055", "Central Campus", "WiFi,Computers,Study Rooms"]
+        [
+            "tech_building",
+            "Technology Building",
+            "ACADEMIC",
+            "123 Tech St",
+            "40.7128,-74.0060",
+            "North Campus",
+            "WiFi,Projector,Whiteboard",
+        ],
+        [
+            "lib_building",
+            "University Library",
+            "LIBRARY",
+            "456 Library Way",
+            "40.7130,-74.0055",
+            "Central Campus",
+            "WiFi,Computers,Study Rooms",
+        ],
     ]
     write_csv_file(output_dir / "buildings_sample.csv", buildings_header, buildings_data)
 
     # Sample resources CSV
-    resources_header = ["id", "resource_type", "capacity", "building_id", "floor_number", "attributes"]
+    resources_header = [
+        "id",
+        "resource_type",
+        "capacity",
+        "building_id",
+        "floor_number",
+        "attributes",
+    ]
     resources_data = [
         ["Room101", "classroom", "30", "tech_building", "1", "computers=30,projector=yes"],
         ["Room201", "classroom", "50", "tech_building", "2", "computers=0,projector=yes"],
         ["Lab301", "lab", "25", "tech_building", "3", "computers=25,specialized_software=yes"],
-        ["StudyRoom1", "breakout", "10", "lib_building", "1", ""]
+        ["StudyRoom1", "breakout", "10", "lib_building", "1", ""],
     ]
     write_csv_file(output_dir / "resources_sample.csv", resources_header, resources_data)
 
     # Sample teachers CSV
-    teachers_header = ["id", "name", "email", "department_id", "title", "preferred_days", "max_daily_hours", "preferred_buildings"]
+    teachers_header = [
+        "id",
+        "name",
+        "email",
+        "department_id",
+        "title",
+        "preferred_days",
+        "max_daily_hours",
+        "preferred_buildings",
+    ]
     teachers_data = [
-        ["alice_prof", "Alice Smith", "alice@university.edu", "cs", "Professor", "monday,wednesday,friday", "4", "tech_building"],
-        ["bob_prof", "Bob Johnson", "bob@university.edu", "cs", "Associate Professor", "tuesday,thursday", "4", "tech_building"],
-        ["charlie_ta", "Charlie Brown", "charlie@university.edu", "cs", "Teaching Assistant", "monday,tuesday,wednesday,thursday", "8", ""]
+        [
+            "alice_prof",
+            "Alice Smith",
+            "alice@university.edu",
+            "cs",
+            "Professor",
+            "monday,wednesday,friday",
+            "4",
+            "tech_building",
+        ],
+        [
+            "bob_prof",
+            "Bob Johnson",
+            "bob@university.edu",
+            "cs",
+            "Associate Professor",
+            "tuesday,thursday",
+            "4",
+            "tech_building",
+        ],
+        [
+            "charlie_ta",
+            "Charlie Brown",
+            "charlie@university.edu",
+            "cs",
+            "Teaching Assistant",
+            "monday,tuesday,wednesday,thursday",
+            "8",
+            "",
+        ],
     ]
     write_csv_file(output_dir / "teachers_sample.csv", teachers_header, teachers_data)
 
@@ -407,19 +496,60 @@ def create_sample_csv_files(output_dir: Union[str, Path]):
     departments_header = ["id", "name", "head", "blacked_out_days", "preferred_room_types"]
     departments_data = [
         ["cs", "Computer Science", "Alice Smith", "friday,saturday,sunday", "classroom,lab"],
-        ["math", "Mathematics", "David Lee", "saturday,sunday", "classroom"]
+        ["math", "Mathematics", "David Lee", "saturday,sunday", "classroom"],
     ]
     write_csv_file(output_dir / "departments_sample.csv", departments_header, departments_data)
 
     # Sample courses CSV
     courses_header = [
-        "id", "duration_hours", "number_of_occurrences", "earliest_date", "latest_date",
-        "enrollment_count", "min_capacity", "department_id", "teacher_id", "preferred_building_id"
+        "id",
+        "duration_hours",
+        "number_of_occurrences",
+        "earliest_date",
+        "latest_date",
+        "enrollment_count",
+        "min_capacity",
+        "department_id",
+        "teacher_id",
+        "preferred_building_id",
     ]
     courses_data = [
-        ["cs101", "2", "24", "2024-01-15 09:00", "2024-05-15 17:00", "30", "25", "cs", "alice_prof", "tech_building"],
-        ["cs102", "2", "24", "2024-01-15 09:00", "2024-05-15 17:00", "25", "20", "cs", "bob_prof", "tech_building"],
-        ["cs301", "3", "16", "2024-01-15 09:00", "2024-05-15 17:00", "20", "15", "cs", "alice_prof", "tech_building"]
+        [
+            "cs101",
+            "2",
+            "24",
+            "2024-01-15 09:00",
+            "2024-05-15 17:00",
+            "30",
+            "25",
+            "cs",
+            "alice_prof",
+            "tech_building",
+        ],
+        [
+            "cs102",
+            "2",
+            "24",
+            "2024-01-15 09:00",
+            "2024-05-15 17:00",
+            "25",
+            "20",
+            "cs",
+            "bob_prof",
+            "tech_building",
+        ],
+        [
+            "cs301",
+            "3",
+            "16",
+            "2024-01-15 09:00",
+            "2024-05-15 17:00",
+            "20",
+            "15",
+            "cs",
+            "alice_prof",
+            "tech_building",
+        ],
     ]
     write_csv_file(output_dir / "courses_sample.csv", courses_header, courses_data)
 
@@ -431,7 +561,7 @@ def create_sample_csv_files(output_dir: Union[str, Path]):
 
 def write_csv_file(file_path: Path, header: List[str], data: List[List[str]]):
     """Write data to a CSV file."""
-    with open(file_path, 'w', newline='', encoding='utf-8') as f:
+    with open(file_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(data)

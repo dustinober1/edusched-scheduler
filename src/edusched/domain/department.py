@@ -21,7 +21,9 @@ class Department:
     availability_calendar_id: Optional[str] = None
 
     # Department-specific requirements
-    preferred_times: Dict[str, List[str]] = field(default_factory=dict)  # e.g., {"monday": ["09:00-12:00", "14:00-17:00"]}
+    preferred_times: Dict[str, List[str]] = field(
+        default_factory=dict
+    )  # e.g., {"monday": ["09:00-12:00", "14:00-17:00"]}
     blacked_out_days: List[str] = field(default_factory=list)  # Days when department doesn't teach
 
     # Resource preferences

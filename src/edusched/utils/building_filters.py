@@ -1,17 +1,15 @@
 """Utility functions for filtering and finding resources by building criteria."""
 
-from datetime import datetime
-from typing import Dict, List, Optional, Set, Tuple
 from collections import defaultdict
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 from edusched.domain.building import Building
 from edusched.domain.resource import Resource
 
 
 def filter_resources_by_building(
-    resources: List[Resource],
-    building_id: str,
-    resource_types: Optional[List[str]] = None
+    resources: List[Resource], building_id: str, resource_types: Optional[List[str]] = None
 ) -> List[Resource]:
     """
     Filter resources by building ID and optionally by resource types.
@@ -37,7 +35,7 @@ def find_nearby_resources(
     buildings: Dict[str, Building],
     reference_resource: Resource,
     max_floors: int = 2,
-    include_same_floor: bool = True
+    include_same_floor: bool = True,
 ) -> List[Resource]:
     """
     Find resources near a reference resource within the same or nearby floors.
@@ -87,7 +85,7 @@ def find_resources_in_campus_area(
     resources: List[Resource],
     buildings: Dict[str, Building],
     campus_area: str,
-    resource_types: Optional[List[str]] = None
+    resource_types: Optional[List[str]] = None,
 ) -> List[Resource]:
     """
     Find resources in a specific campus area.
@@ -105,7 +103,8 @@ def find_resources_in_campus_area(
 
     # Get buildings in the campus area
     area_buildings = {
-        building_id for building_id, building in buildings.items()
+        building_id
+        for building_id, building in buildings.items()
         if building.campus_area == campus_area
     }
 
@@ -118,8 +117,7 @@ def find_resources_in_campus_area(
 
 
 def group_resources_by_building(
-    resources: List[Resource],
-    buildings: Dict[str, Building]
+    resources: List[Resource], buildings: Dict[str, Building]
 ) -> Dict[str, Tuple[Building, List[Resource]]]:
     """
     Group resources by their building.
@@ -144,7 +142,7 @@ def find_available_breakout_rooms(
     building_id: str,
     classroom_resource_id: str,
     scheduled_resources: Dict[str, List[Tuple[datetime, datetime]]] = None,
-    assignment_time: Optional[Tuple[datetime, datetime]] = None
+    assignment_time: Optional[Tuple[datetime, datetime]] = None,
 ) -> List[Resource]:
     """
     Find available breakout rooms in the same building as a classroom.
@@ -174,7 +172,7 @@ def find_available_breakout_rooms(
             room_schedule = scheduled_resources.get(room.id, [])
             is_available = True
             for scheduled_start, scheduled_end in room_schedule:
-                if (assignment_time[0] < scheduled_end and assignment_time[1] > scheduled_start):
+                if assignment_time[0] < scheduled_end and assignment_time[1] > scheduled_start:
                     is_available = False
                     break
             if is_available:
@@ -188,7 +186,7 @@ def find_available_breakout_rooms(
 def calculate_building_utilization(
     resources: List[Resource],
     scheduled_resources: Dict[str, List[Tuple[datetime, datetime]]],
-    buildings: Dict[str, Building]
+    buildings: Dict[str, Building],
 ) -> Dict[str, float]:
     """
     Calculate utilization percentage for each building.
@@ -237,7 +235,7 @@ def recommend_classroom(
     resources: List[Resource],
     buildings: Dict[str, Building],
     preferred_building_id: Optional[str] = None,
-    required_building_id: Optional[str] = None
+    required_building_id: Optional[str] = None,
 ) -> List[Resource]:
     """
     Recommend classrooms based on requirements and preferences.

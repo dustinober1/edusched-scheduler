@@ -1,16 +1,19 @@
 """Schedule optimization API routes."""
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from edusched.api.database import db
 from edusched.api.dependencies import get_active_user
-from edusched.api.events import emit_solver_started, emit_solver_progress, emit_solver_completed, emit_solver_failed
+from edusched.api.events import (
+    emit_solver_completed,
+    emit_solver_failed,
+    emit_solver_progress,
+    emit_solver_started,
+)
 from edusched.api.models import User
-from edusched.core_api import solve
 from edusched.domain.problem import Problem
 
 router = APIRouter()
@@ -396,7 +399,10 @@ async def run_optimization(
 
         # Emit progress updates
         for i in range(0, 101, 10):
-            if schedule_id in running_optimizations and running_optimizations[schedule_id]["status"] != "cancelled":
+            if (
+                schedule_id in running_optimizations
+                and running_optimizations[schedule_id]["status"] != "cancelled"
+            ):
                 await emit_solver_progress(
                     schedule_id,
                     user_id,
@@ -408,6 +414,7 @@ async def run_optimization(
                 )
                 # Simulate work
                 import asyncio
+
                 await asyncio.sleep(time_limit / 100)
 
         # Check if cancelled
