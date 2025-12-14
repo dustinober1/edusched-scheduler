@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/department_constraints.py
+# hypothesis_version: 6.148.7
+
+[0.0, 1.0, 500.0, 1000.0, 'Assignment', 'assignment_cost', 'budget_limit', 'current_usage', 'department_budget', 'department_id', 'friday', 'monday', 'over_budget', 'proportional', 'resource_id', 'resource_sharing', 'saturday', 'sunday', 'thursday', 'total_cost', 'tuesday', 'wednesday']

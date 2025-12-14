@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/building.py
+# hypothesis_version: 6.148.7
+
+[0.5, 'Building', 'academic', 'administrative', 'dining', 'dormitory', 'lab', 'library', 'other', 'recreation']

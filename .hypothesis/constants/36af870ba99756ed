@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/__init__.py
+# hypothesis_version: 6.148.7
+
+['0.1.0b1', 'Assignment', 'AttributeMatch', 'BackendError', 'BlackoutDates', 'Calendar', 'Constraint', 'ConstraintContext', 'HeuristicSolver', 'InfeasibilityError', 'MaxPerDay', 'NoOverlap', 'Objective', 'Problem', 'Resource', 'Result', 'SessionRequest', 'SolverBackend', 'ValidationError', 'Violation', 'WithinDateRange', '__version__', 'solve']

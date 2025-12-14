@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/time_blocker_constraint.py
+# hypothesis_version: 6.148.7
+
+['Assignment', 'TimeBlocker', 'hard.time_blocker']

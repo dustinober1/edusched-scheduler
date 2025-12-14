@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/student.py
+# hypothesis_version: 6.148.7
+
+[0.0, 4.0, '%A', '%H:%M', '0.0 to 4.0', 'Can register', 'academic', 'active', 'credits', 'cumulative_gpa', 'day', 'dropped', 'end', 'fall', 'financial', 'freshman', 'graduate', 'graduated', 'id', 'inactive', 'junior', 'name', 'non-empty string', 'on_leave', 'postdoctoral', 'registered', 'registration', 'senior', 'sophomore', 'spring', 'start', 'summer', 'type', 'withdrawn']

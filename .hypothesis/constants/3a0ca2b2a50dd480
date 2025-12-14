@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/department.py
+# hypothesis_version: 6.148.7
+
+['friday', 'id', 'monday', 'name', 'non-empty string', 'preferred_times', 'saturday', 'sunday', 'thursday', 'tuesday', 'wednesday']
