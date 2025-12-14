@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/resource.py
+# hypothesis_version: 6.148.7
+
+[100, 240, 480, 999, 'Available', 'accessibility', 'art_studio', 'available', 'breakout_room', 'capacity', 'classroom_standard', 'classroom_tier1', 'classroom_tier2', 'clinical_room', 'computer_lab', 'conference_room', 'dance_studio', 'engineering_lab', 'equipment', 'fallback_by_type', 'fallback_percentage', 'fallback_uses', 'lab', 'lecture', 'lecture_hall', 'low', 'maintenance', 'music_room', 'occupied', 'out_of_service', 'primary_by_type', 'primary_uses', 'reserved', 'science_lab', 'seminar_room', 'simulation_lab', 'study_room', 'technical_features', 'testing_center', 'total_uses']

@@ -1,3 +1,5 @@
+LICENSE
+README.md
 pyproject.toml
 src/edusched/__init__.py
 src/edusched/api.py
@@ -8,6 +10,7 @@ src/edusched.egg-info/dependency_links.txt
 src/edusched.egg-info/requires.txt
 src/edusched.egg-info/top_level.txt
 tests/test_api_properties.py
+tests/test_blackout_dates.py
 tests/test_building_features.py
 tests/test_capacity_features.py
 tests/test_conflict_properties.py
@@ -17,11 +20,15 @@ tests/test_department_teacher_constraints.py
 tests/test_domain_properties.py
 tests/test_incremental_scheduling_properties.py
 tests/test_infeasibility_properties.py
+tests/test_instructor_constraints.py
 tests/test_locked_assignment_properties.py
 tests/test_objective_properties.py
 tests/test_problem_properties.py
 tests/test_project_setup.py
 tests/test_result_properties.py
+tests/test_room_flexibility.py
 tests/test_scheduling_features.py
 tests/test_solver_properties.py
+tests/test_student_features.py
+tests/test_teacher_constraints.py
 tests/test_type_validation_properties.py

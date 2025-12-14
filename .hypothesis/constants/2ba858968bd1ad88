@@ -1,0 +1,4 @@
+# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/room_flexibility_constraints.py
+# hypothesis_version: 6.148.7
+
+[0.0, 0.3, 0.7, 0.9, 1.0, 'Assignment', 'breakout', 'conference', 'course_type', 'enrollment_count', 'lab', 'lecture', 'required_attributes', 'room_type', 'scheduling_pattern', 'seminar']

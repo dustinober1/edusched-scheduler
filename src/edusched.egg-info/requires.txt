@@ -2,7 +2,7 @@ python-dateutil>=2.8.0
 typing-extensions>=4.0.0
 
 [all]
-edusched[dev,excel,ics,ortools,pandas,viz]
+edusched[dev,excel,pandas]
 
 [dev]
 pytest>=7.0.0
@@ -13,14 +13,5 @@ ruff>=0.1.0
 [excel]
 openpyxl>=3.0.0
 
-[ics]
-icalendar>=4.0.0
-
-[ortools]
-ortools>=9.0.0
-
 [pandas]
 pandas>=1.5.0
-
-[viz]
-matplotlib>=3.5.0
