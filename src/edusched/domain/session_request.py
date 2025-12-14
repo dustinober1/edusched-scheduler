@@ -142,4 +142,15 @@ class SessionRequest:
                 )
             )
 
+        # Validate modality
+        valid_modalities = {"online", "in_person", "hybrid"}
+        if self.modality not in valid_modalities:
+             errors.append(
+                ValidationError(
+                    field="modality",
+                    expected_format=f"one of {valid_modalities}",
+                    actual_value=self.modality,
+                )
+            )
+
         return errors

@@ -1,6 +1,6 @@
 """EduSched: A constraint-based scheduling package for educational institutions."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.0b1"
 
 # Core domain model imports
 from edusched.domain.session_request import SessionRequest

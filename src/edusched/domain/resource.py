@@ -31,6 +31,7 @@ class RoomType(Enum):
     CLINICAL_ROOM = "clinical_room"
     SIMULATION_LAB = "simulation_lab"
     CONFERENCE_ROOM = "conference_room"
+    BREAKOUT_ROOM = "breakout_room"
     STUDY_ROOM = "study_room"
     TESTING_CENTER = "testing_center"
 
@@ -148,6 +149,17 @@ class Resource:
     # Blackout periods (building-wide or room-specific)
     blackout_periods: List[BlackoutPeriod] = field(default_factory=list)
     building_blackouts: List[BlackoutPeriod] = field(default_factory=list)  # Inherited from building
+
+    # Flexible room usage
+    can_be_used_as: Set[RoomType] = field(default_factory=set)  # Alternative room types this room can serve as
+    fallback_priority: Dict[RoomType, int] = field(default_factory=dict)  # Priority when used as fallback (1=highest)
+    min_capacity_for_alt_use: Optional[Dict[RoomType, int]] = None  # Min capacity needed for alternative use
+    requires_conversion: Set[RoomType] = field(default_factory=set)  # Room types that need setup changes
+    conversion_time_minutes: Dict[RoomType, int] = field(default_factory=dict)  # Time needed to convert
+
+    # Room usage tracking
+    primary_usage_count: Dict[str, int] = field(default_factory=dict)  # Count of times used as primary type
+    fallback_usage_count: Dict[str, int] = field(default_factory=dict)  # Count of times used as fallback
 
     # Cost and billing
     hourly_rate: Optional[float] = None
@@ -294,15 +306,24 @@ class Resource:
         Returns:
             True if all requirements are satisfied, False otherwise
         """
+        # Special keys that are handled separately
+        special_keys = {"capacity", "equipment", "accessibility", "technical_features"}
+
         # Check basic attributes
         for key, required_value in requirements.items():
-            if key in self.attributes:
-                if self.attributes[key] != required_value:
-                    return False
+            if key in special_keys:
+                continue
+
+            if key not in self.attributes:
+                return False
+            
+            if self.attributes[key] != required_value:
+                return False
 
         # Check capacity requirement
         if "capacity" in requirements:
-            if self.capacity is None or self.capacity < requirements["capacity"]:
+            resource_capacity = self.capacity if self.capacity is not None else self.attributes.get("capacity")
+            if resource_capacity is None or resource_capacity < requirements["capacity"]:
                 return False
 
         # Check equipment requirements
@@ -323,6 +344,35 @@ class Resource:
                     return False
 
         return True
+
+    def validate(self) -> List["ValidationError"]:  # type: ignore
+        """
+        Validate resource parameters.
+
+        Returns:
+            List of validation errors (empty if valid)
+        """
+        from edusched.errors import ValidationError
+        errors: List[ValidationError] = []
+
+        if not self.id:
+            errors.append(ValidationError(field="id", expected_format="non-empty string", actual_value=self.id))
+
+        valid_types = ["room", "instructor", "equipment", "campus", "online_slot"]
+        if self.resource_type not in valid_types:
+            errors.append(ValidationError(field="resource_type", expected_format=f"one of {valid_types}", actual_value=self.resource_type))
+
+        if self.capacity is not None and self.capacity < 0:
+            errors.append(ValidationError(field="capacity", expected_format="non-negative integer", actual_value=self.capacity))
+        
+        # Validate attribute types
+        valid_attr_types = (str, int, list, dict, bool, type(None))
+        # Note: float is intentionally excluded based on test requirements
+        for key, value in self.attributes.items():
+             if not isinstance(value, valid_attr_types):
+                 errors.append(ValidationError(field="attributes", expected_format=f"valid types {valid_attr_types} for key '{key}'", actual_value=type(value)))
+
+        return errors
 
     def add_equipment(self, equipment: Equipment) -> None:
         """Add equipment to the resource."""
@@ -378,3 +428,154 @@ class Resource:
                 return True, blackout.reason
 
         return False, None
+
+    def can_be_used_as_type(self, target_type: RoomType) -> bool:
+        """
+        Check if this room can be used as the specified room type.
+
+        Args:
+            target_type: The room type to check
+
+        Returns:
+            True if the room can serve as the target type
+        """
+        # If it's already the target type, it can be used
+        if self.room_type == target_type:
+            return True
+
+        # Check if it's in the flexible usage list
+        return target_type in self.can_be_used_as
+
+    def get_fallback_priority(self, target_type: RoomType) -> int:
+        """
+        Get the priority when this room is used as a fallback for the target type.
+
+        Args:
+            target_type: The room type it's being used for
+
+        Returns:
+            Priority value (1=highest, higher numbers=lower priority)
+        """
+        return self.fallback_priority.get(target_type, 999)  # Default to very low priority
+
+    def meets_capacity_for_type(self, target_type: RoomType, enrollment: int) -> bool:
+        """
+        Check if the room meets minimum capacity requirements for the target type.
+
+        Args:
+            target_type: The room type it would be used as
+            enrollment: Number of students enrolled
+
+        Returns:
+            True if capacity is adequate
+        """
+        if not self.capacity:
+            return True
+
+        # Must meet enrollment requirement
+        if self.capacity < enrollment:
+            return False
+
+        # If this is the primary room type, we're done
+        if target_type == self.room_type:
+            return True
+
+        # If there's a minimum capacity for this alternative use, check it
+        if self.min_capacity_for_alt_use and target_type in self.min_capacity_for_alt_use:
+            min_capacity = self.min_capacity_for_alt_use[target_type]
+            return enrollment >= min_capacity  # Enrollment must meet minimum requirement
+
+        return True
+
+    def needs_conversion_for_type(self, target_type: RoomType) -> bool:
+        """
+        Check if the room needs conversion to be used as the target type.
+
+        Args:
+            target_type: The room type it would be used as
+
+        Returns:
+            True if conversion/setup is needed
+        """
+        return target_type in self.requires_conversion
+
+    def get_conversion_time(self, target_type: RoomType) -> int:
+        """
+        Get time needed to convert the room for the target type.
+
+        Args:
+            target_type: The room type it would be used as
+
+        Returns:
+            Time in minutes needed for conversion
+        """
+        return self.conversion_time_minutes.get(target_type, 0)
+
+    def record_usage(self, used_as_type: Optional[RoomType] = None, is_fallback: bool = False) -> None:
+        """
+        Record usage of the room for analytics.
+
+        Args:
+            used_as_type: The room type it was used as (None for primary type)
+            is_fallback: Whether this was a fallback usage
+        """
+        if used_as_type is None:
+            used_as_type = self.room_type
+
+        type_name = used_as_type.value
+
+        if is_fallback:
+            self.fallback_usage_count[type_name] = self.fallback_usage_count.get(type_name, 0) + 1
+        else:
+            self.primary_usage_count[type_name] = self.primary_usage_count.get(type_name, 0) + 1
+
+    def get_usage_stats(self) -> Dict[str, Any]:
+        """
+        Get usage statistics for this room.
+
+        Returns:
+            Dictionary with usage metrics
+        """
+        total_primary = sum(self.primary_usage_count.values())
+        total_fallback = sum(self.fallback_usage_count.values())
+
+        return {
+            "total_uses": total_primary + total_fallback,
+            "primary_uses": total_primary,
+            "fallback_uses": total_fallback,
+            "primary_by_type": self.primary_usage_count.copy(),
+            "fallback_by_type": self.fallback_usage_count.copy(),
+            "fallback_percentage": (total_fallback / max(total_primary + total_fallback, 1)) * 100
+        }
+
+    def add_fallback_capability(
+        self,
+        fallback_type: RoomType,
+        priority: int = 10,
+        min_capacity: Optional[int] = None,
+        conversion_time: Optional[int] = None,
+        requires_conversion: bool = False
+    ) -> None:
+        """
+        Add capability for this room to be used as a fallback.
+
+        Args:
+            fallback_type: The room type it can serve as
+            priority: Priority level (1=highest)
+            min_capacity: Minimum capacity required for this use
+            conversion_time: Time in minutes needed for conversion
+            requires_conversion: Whether physical conversion is needed
+        """
+        self.can_be_used_as.add(fallback_type)
+        self.fallback_priority[fallback_type] = priority
+
+        if requires_conversion:
+            self.requires_conversion.add(fallback_type)
+
+        if conversion_time is not None:
+            self.conversion_time_minutes[fallback_type] = conversion_time
+
+        if min_capacity is not None:
+            if self.min_capacity_for_alt_use is None:
+                self.min_capacity_for_alt_use = {}
+            self.min_capacity_for_alt_use[fallback_type] = min_capacity

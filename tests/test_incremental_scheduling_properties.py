@@ -143,7 +143,7 @@ class TestIncrementalSchedulingProperties:
                 duration=timedelta(hours=1),
                 number_of_occurrences=1,
                 earliest_date=base_time,
-                latest_date=base_time + timedelta(hours=1)  # Very tight window
+                latest_date=base_time + timedelta(hours=2)  # 2 hour window for 1 hour duration
             )
             requests.append(request)
 

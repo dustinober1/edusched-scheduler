@@ -70,6 +70,11 @@ class Problem:
                 f"institutional_calendar_id '{self.institutional_calendar_id}' not found in calendars"
             )
 
+        # Validate calendar properties
+        for calendar in self.calendars:
+            if calendar.timezone is None:
+                errors.append(f"Calendar '{calendar.id}' has no timezone")
+
         # Validate resource calendar references
         for resource in self.resources:
             if (

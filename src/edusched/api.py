@@ -44,25 +44,10 @@ def solve(
         seed = random.randint(0, 2**31 - 1)
 
     # Determine which backend to use
-    if backend == "auto":
-        # Try OR-Tools if available, otherwise fall back to heuristic
-        try:
-            from edusched.solvers.ortools_solver import ORToolsSolver
-            solver = ORToolsSolver()
-        except (ImportError, MissingOptionalDependency):
-            solver = HeuristicSolver()
-    elif backend == "heuristic":
+    if backend == "auto" or backend == "heuristic":
         solver = HeuristicSolver()
-    elif backend == "ortools":
-        try:
-            from edusched.solvers.ortools_solver import ORToolsSolver
-            solver = ORToolsSolver()
-        except ImportError:
-            raise BackendError(
-                "OR-Tools backend not available. Install with: pip install edusched[ortools]"
-            )
     else:
-        raise BackendError(f"Unknown backend: {backend}")
+        raise BackendError(f"Unknown backend: {backend}. Note: 'ortools' backend is not currently available.")
 
     # Try to solve with selected backend
     try:
