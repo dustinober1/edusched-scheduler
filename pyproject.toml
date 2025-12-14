@@ -4,23 +4,44 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "edusched"
-version = "0.1.0b1"
+version = "0.1.0"
 description = "A constraint-based scheduling package for educational institutions"
 readme = "README.md"
 requires-python = ">=3.9"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    {name = "EduSched Contributors"}
+    {name = "Dustin Ober", email = "dober.code@gmail.com"}
 ]
-keywords = ["scheduling", "constraints", "education", "optimization"]
+maintainers = [
+    {name = "Dustin Ober", email = "dober.code@gmail.com"}
+]
+keywords = [
+    "scheduling",
+    "constraints",
+    "education",
+    "optimization",
+    "timetabling",
+    "university",
+    "school",
+    "course-scheduling",
+    "resource-allocation"
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: Office/Business :: Scheduling",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -29,22 +50,40 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ortools = ["ortools>=9.0.0"]
 pandas = ["pandas>=1.5.0"]
 excel = ["openpyxl>=3.0.0"]
-dev = ["pytest>=7.0.0", "hypothesis>=6.0.0", "mypy>=1.0.0", "ruff>=0.1.0"]
-all = ["edusched[pandas,excel,dev]"]
+api = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "pydantic>=2.0.0",
+]
+icalendar = ["icalendar>=5.0.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "hypothesis>=6.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+all = ["edusched[ortools,pandas,excel,api,icalendar]"]
 
 [project.urls]
-Homepage = "https://github.com/edusched/edusched"
-Documentation = "https://edusched.readthedocs.io"
-Repository = "https://github.com/edusched/edusched.git"
-Issues = "https://github.com/edusched/edusched/issues"
+Homepage = "https://github.com/dustinober1/edusched-scheduler"
+Documentation = "https://github.com/dustinober1/edusched-scheduler#readme"
+Repository = "https://github.com/dustinober1/edusched-scheduler.git"
+Issues = "https://github.com/dustinober1/edusched-scheduler/issues"
+Changelog = "https://github.com/dustinober1/edusched-scheduler/releases"
 
 [tool.setuptools]
-packages = ["edusched"]
+include-package-data = true
 
-[tool.setuptools.package-dir]
-"" = "src"
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["edusched*"]
+
+[tool.setuptools.package-data]
+edusched = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -88,3 +127,15 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["edusched"]
+
+[tool.coverage.run]
+source = ["src/edusched"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
