@@ -129,6 +129,36 @@ if FASTAPI_AVAILABLE:
         tags=["bulk_import"],
     )
 
+    from edusched.api.routes import conflicts, optimization, files
+    app.include_router(
+        conflicts.router,
+        prefix="/api/v1/conflicts",
+        tags=["conflicts"],
+    )
+    app.include_router(
+        optimization.router,
+        prefix="/api/v1/optimization",
+        tags=["optimization"],
+    )
+    app.include_router(
+        files.router,
+        prefix="/api/v1/files",
+        tags=["files"],
+    )
+
+    # Add WebSocket endpoint
+    from fastapi import WebSocket, WebSocketDisconnect
+    from edusched.api.websocket import websocket_endpoint
+
+    @app.websocket("/ws")
+    async def websocket_route(
+        websocket: WebSocket,
+        user_id: str,
+        schedule_id: str = None,
+    ):
+        """WebSocket endpoint for real-time updates."""
+        await websocket_endpoint(websocket, user_id, schedule_id)
+
     # Rate limiting middleware
     @app.middleware("http")
     async def rate_limit_middleware(request: Request, call_next):
