@@ -1,0 +1,4 @@
+id,name,description,start_date,end_date,resource_ids,resource_types
+spring_break,Spring Break 2024,University spring break period,2024-03-10 00:00,2024-03-17 23:59,['all'],['all']
+finals_week,Finals Week 2024,Final examination period - no regular classes,2024-04-29 00:00,2024-05-03 23:59,['all'],['all']
+tech_maintenance,Tech Building Maintenance,Scheduled maintenance in Technology Building,2024-02-15 00:00,2024-02-17 23:59,"['tech_101', 'tech_201', 'tech_lab_301']","['classroom', 'lab']"

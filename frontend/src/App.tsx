@@ -8,7 +8,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ScheduleEditor from './pages/ScheduleEditor';
 import ScheduleViewer from './pages/ScheduleViewer';
-import Reports from './pages/Reports';
+// import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Resources from './pages/Resources';
 import Constraints from './pages/Constraints';
@@ -43,86 +43,86 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <RealtimeProvider>
           <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Dashboard />
-                  </Suspense>
-                } />
-                <Route path="schedule">
-                  <Route path="editor" element={
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="dashboard" element={
                     <Suspense fallback={<LoadingSpinner />}>
-                      <ScheduleEditor />
+                      <Dashboard />
                     </Suspense>
                   } />
-                  <Route path="view" element={
+                  <Route path="schedule">
+                    <Route path="editor" element={
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <ScheduleEditor />
+                      </Suspense>
+                    } />
+                    <Route path="view" element={
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <ScheduleViewer />
+                      </Suspense>
+                    } />
+                  </Route>
+                  <Route path="resources" element={
                     <Suspense fallback={<LoadingSpinner />}>
-                      <ScheduleViewer />
+                      <Resources />
+                    </Suspense>
+                  } />
+                  <Route path="constraints" element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Constraints />
+                    </Suspense>
+                  } />
+                  <Route path="optimization" element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Optimization />
+                    </Suspense>
+                  } />
+                  {/* <Route path="reports" element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Reports />
+                    </Suspense>
+                  } /> */}
+                  <Route path="integrations" element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Integrations />
+                    </Suspense>
+                  } />
+                  <Route path="settings" element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Settings />
                     </Suspense>
                   } />
                 </Route>
-                <Route path="resources" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Resources />
-                  </Suspense>
-                } />
-                <Route path="constraints" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Constraints />
-                  </Suspense>
-                } />
-                <Route path="optimization" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Optimization />
-                  </Suspense>
-                } />
-                <Route path="reports" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Reports />
-                  </Suspense>
-                } />
-                <Route path="integrations" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Integrations />
-                  </Suspense>
-                } />
-                <Route path="settings" element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <Settings />
-                  </Suspense>
-                } />
-              </Route>
-              {/* Test route for development */}
-              <Route path="/test" element={<ScheduleTest />} />
-            </Routes>
-          </div>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#22c55e',
-                  secondary: '#fff',
+                {/* Test route for development */}
+                <Route path="/test" element={<ScheduleTest />} />
+              </Routes>
+            </div>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
                 },
-              },
-              error: {
-                duration: 5000,
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#22c55e',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
+                error: {
+                  duration: 5000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
           </Router>
         </RealtimeProvider>
       </QueryClientProvider>

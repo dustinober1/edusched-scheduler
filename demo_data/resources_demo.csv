@@ -1,0 +1,11 @@
+id,resource_type,capacity,building_id,floor_number,attributes
+tech_101,classroom,30,tech_building,1,"computers=30,projector=yes,whiteboard=yes"
+tech_201,classroom,50,tech_building,2,"computers=0,projector=yes,whiteboard=yes"
+tech_lab_301,lab,25,tech_building,3,"computers=25,projector=yes,specialized_software=yes"
+tech_auditorium,lecture_hall,150,tech_building,1,"computers=0,projector=yes,lecture_capture=yes"
+acad_101,classroom,40,academic_building,1,"computers=0,projector=yes,whiteboard=yes"
+acad_201,classroom,60,academic_building,2,"computers=0,projector=yes,whiteboard=yes"
+acad_lecture_hall,lecture_hall,200,academic_building,1,"computers=0,projector=yes,lecture_capture=yes"
+sci_lab_101,lab,20,science_building,1,"computers=20,lab_equipment=yes,safety_equipment=yes"
+sci_201,classroom,35,science_building,2,"computers=0,projector=yes,whiteboard=yes"
+sci_lecture_hall,lecture_hall,120,science_building,1,"computers=0,projector=yes,demo_equipment=yes"

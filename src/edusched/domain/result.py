@@ -37,7 +37,7 @@ class InfeasibilityReport:
 
 @dataclass
 class Result:
-    """Represents the result of a scheduling operation."""
+    """Represents result of a scheduling operation."""
 
     status: Literal["feasible", "partial", "infeasible"]
     assignments: List["Assignment"]
@@ -47,6 +47,11 @@ class Result:
     seed_used: Optional[int] = None
     solve_time_seconds: float = 0.0
     diagnostics: Optional[InfeasibilityReport] = None
+
+    @property
+    def solver_time_ms(self) -> float:
+        """Get solver time in milliseconds for API compatibility."""
+        return self.solve_time_seconds * 1000
 
     @property
     def feasible(self) -> bool:

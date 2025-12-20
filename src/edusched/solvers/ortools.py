@@ -95,13 +95,18 @@ class ORToolsSolver:
                     problem, assignments, status == cp_model.OPTIMAL
                 )
 
-                return Result(
+                result = Result(
                     assignments=solution_assignments,
-                    problem=problem,
-                    solver_time_ms=solver_time_ms,
-                    iterations=self.solver.NumBranches(),
-                    status="optimal" if status == cp_model.OPTIMAL else "feasible",
+                    unscheduled_requests=[],
+                    backend_used=self.backend_name,
+                    seed_used=seed,
+                    solve_time_seconds=solver_time_ms / 1000,
+                    objective_score=None,
                 )
+                # Manually set iterations if available
+                if hasattr(result, 'iterations'):
+                    result.iterations = self.solver.NumBranches()
+                return result
             else:
                 # No solution found
                 if fallback:
@@ -111,9 +116,10 @@ class ORToolsSolver:
                 else:
                     return Result(
                         assignments=[],
-                        problem=problem,
-                        solver_time_ms=solver_time_ms,
-                        iterations=self.solver.NumBranches(),
+                        unscheduled_requests=[],
+                        backend_used=self.backend_name,
+                        seed_used=seed,
+                        solve_time_seconds=solver_time_ms / 1000,
                         status="infeasible",
                     )
 

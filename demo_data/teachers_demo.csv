@@ -1,0 +1,6 @@
+id,name,email,department_id,title,preferred_days,max_daily_hours,preferred_buildings,preferred_room_types,max_class_size
+chen_prof,Dr. Sarah Chen,chen@university.edu,cs_dept,Professor,"['monday', 'wednesday', 'friday']",4,['tech_building'],"['classroom', 'lab']",50
+roberts_prof,Dr. Michael Roberts,roberts@university.edu,math_dept,Professor,"['tuesday', 'thursday']",4,['academic_building'],"['classroom', 'lecture_hall']",100
+liu_prof,Dr. Jennifer Liu,liu@university.edu,physics_dept,Professor,"['monday', 'wednesday', 'friday']",5,['science_building'],"['classroom', 'lab']",30
+johnson_ta,Alex Johnson,johnson@university.edu,cs_dept,Teaching Assistant,"['monday', 'tuesday', 'wednesday', 'thursday', 'friday']",8,['tech_building'],['classroom'],25
+williams_ta,Emma Williams,williams@university.edu,math_dept,Teaching Assistant,"['tuesday', 'thursday']",6,['academic_building'],['classroom'],30

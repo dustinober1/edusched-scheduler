@@ -1,0 +1,4 @@
+id,name,head,building_id,contact_email,preferred_room_types,required_amenities
+cs_dept,Computer Science Department,Dr. Sarah Chen,tech_building,cs@university.edu,"['classroom', 'lab', 'lecture_hall']","['WiFi', 'Projector', 'Whiteboard']"
+math_dept,Mathematics Department,Dr. Michael Roberts,academic_building,math@university.edu,"['classroom', 'lecture_hall']","['WiFi', 'Whiteboard']"
+physics_dept,Physics Department,Dr. Jennifer Liu,science_building,physics@university.edu,"['classroom', 'lab', 'lecture_hall']","['WiFi', 'Projector', 'Lab Equipment']"

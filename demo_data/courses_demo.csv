@@ -1,0 +1,8 @@
+id,duration_hours,number_of_occurrences,earliest_date,latest_date,enrollment_count,min_capacity,max_capacity,department_id,teacher_id,preferred_building_id,required_resource_types
+cs101,2,24,2024-01-15 09:00,2024-05-15 17:00,45,25,60,cs_dept,chen_prof,tech_building,"{""computers"": ""optional"", ""projector"": ""required""}"
+cs102,2,24,2024-01-15 09:00,2024-05-15 17:00,30,20,40,cs_dept,chen_prof,tech_building,"{""computers"": ""required"", ""specialized_software"": ""optional""}"
+cs201,3,16,2024-01-15 10:00,2024-05-15 17:00,25,15,30,cs_dept,johnson_ta,tech_building,"{""computers"": ""required"", ""specialized_software"": ""required""}"
+math101,2,24,2024-01-15 10:00,2024-05-15 17:00,80,50,150,math_dept,roberts_prof,academic_building,"{""projector"": ""required"", ""whiteboard"": ""required""}"
+math201,2,24,2024-01-15 14:00,2024-05-15 17:00,35,25,50,math_dept,williams_ta,academic_building,"{""whiteboard"": ""required"", ""projector"": ""optional""}"
+phys101,3,16,2024-01-15 09:00,2024-05-15 17:00,28,20,35,physics_dept,liu_prof,science_building,"{""lab_equipment"": ""required"", ""computers"": ""optional""}"
+phys201,3,16,2024-01-15 14:00,2024-05-15 17:00,22,15,30,physics_dept,liu_prof,science_building,"{""lab_equipment"": ""required"", ""safety_equipment"": ""required""}"

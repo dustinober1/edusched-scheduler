@@ -330,9 +330,9 @@ async def export_schedule_endpoint(
     problem = Problem(requests=[], resources=[], calendars=[], constraints=[])
     result = Result(
         assignments=[],  # Would need to reconstruct from assignments
-        problem=problem,
-        solver_time_ms=0,
+        unscheduled_requests=[],
         status=schedule.status,
+        solve_time_seconds=0,
     )
 
     # Generate export file

@@ -1,0 +1,4 @@
+id,name,building_type,address,coordinates,campus_area,amenities
+tech_building,Technology Building,ACADEMIC,"123 Tech Street, University Campus","40.7128,-74.0060",North Campus,"WiFi,Projector,Whiteboard,Computers,Lab Equipment"
+academic_building,Academic Building,ACADEMIC,"456 Academic Way, University Campus","40.7130,-74.0055",Central Campus,"WiFi,Projector,Whiteboard, Lecture Capture"
+science_building,Science Building,ACADEMIC,"789 Science Avenue, University Campus","40.7132,-74.0050",South Campus,"WiFi,Projector,Whiteboard,Lab Equipment,Safety Equipment"

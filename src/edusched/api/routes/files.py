@@ -68,32 +68,30 @@ async def upload_schedule_data(
         warnings = []
 
         if data_type == "teachers":
-            teachers = importer.import_teachers(tmp_path)
+            teachers = importer.import_file(tmp_path, "teachers")
             records_imported = len(teachers)
         elif data_type == "courses":
-            requests = importer.import_courses(tmp_path)
+            requests = importer.import_file(tmp_path, "courses")
             records_imported = len(requests)
         elif data_type == "resources":
-            resources = importer.import_resources(tmp_path)
+            resources = importer.import_file(tmp_path, "resources")
             records_imported = len(resources)
         elif data_type == "buildings":
-            buildings = importer.import_buildings(tmp_path)
+            buildings = importer.import_file(tmp_path, "buildings")
             records_imported = len(buildings)
         elif data_type == "holidays":
-            calendars = importer.import_holidays(tmp_path)
+            calendars = importer.import_file(tmp_path, "calendars")
             records_imported = len(calendars)
         elif data_type == "time_blockers":
-            blockers = importer.import_time_blockers(tmp_path)
+            blockers = importer.import_file(tmp_path, "time_blockers")
             records_imported = len(blockers)
 
         # Emit import event
         await emit_data_imported(
             user_id=current_user.id,
-            data={
-                "data_type": data_type,
-                "filename": file.filename,
-                "records_imported": records_imported,
-            },
+            data_type=data_type,
+            count=records_imported,
+            details={"filename": file.filename},
         )
 
         return BulkImportResponse(
@@ -176,17 +174,17 @@ async def upload_multiple_files(
             records = 0
 
             if data_type == "teachers":
-                records = len(importer.import_teachers(tmp_path))
+                records = len(importer.import_file(tmp_path, "teachers"))
             elif data_type == "courses":
-                records = len(importer.import_courses(tmp_path))
+                records = len(importer.import_file(tmp_path, "courses"))
             elif data_type == "resources":
-                records = len(importer.import_resources(tmp_path))
+                records = len(importer.import_file(tmp_path, "resources"))
             elif data_type == "buildings":
-                records = len(importer.import_buildings(tmp_path))
+                records = len(importer.import_file(tmp_path, "buildings"))
             elif data_type == "holidays":
-                records = len(importer.import_holidays(tmp_path))
+                records = len(importer.import_file(tmp_path, "calendars"))
             elif data_type == "time_blockers":
-                records = len(importer.import_time_blockers(tmp_path))
+                records = len(importer.import_file(tmp_path, "time_blockers"))
 
             results.append(
                 {
@@ -253,33 +251,49 @@ async def download_template(
             detail=f"Invalid template type. Valid: {', '.join(template_types.keys())}",
         )
 
-    # Create template file
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = Path(tmp_dir)
-        from edusched.utils.data_import import create_sample_csv_files
+    # Create template file in a persistent temp location
+    tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+    tmp_path = Path(tmp_file.name)
 
-        create_sample_csv_files(tmp_path)
+    from edusched.utils.data_import import create_sample_csv_files
 
-        # Get appropriate template file
-        template_file = tmp_path / f"{template_types[data_type]}.{format}"
+    # Create templates in the same directory as the temp file
+    tmp_dir = tmp_path.parent
+    create_sample_csv_files(tmp_dir)
 
-        if not template_file.exists():
-            # Fallback to CSV
-            template_file = tmp_path / f"{template_types[data_type]}.csv"
+    # Map template types to actual file names created by create_sample_csv_files
+    template_filenames = {
+        "teachers": "teachers_sample.csv",
+        "courses": "courses_sample.csv", 
+        "resources": "resources_sample.csv",
+        "buildings": "buildings_sample.csv",
+        "holidays": "holidays_sample.csv",
+        "time_blockers": "time_blockers_sample.csv",
+    }
 
-        # Determine media type
-        media_types = {
-            "csv": "text/csv",
-            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        }
+    # Get appropriate template file
+    filename = template_filenames.get(data_type, f"{template_types[data_type]}_sample.csv")
+    template_file = tmp_dir / filename
 
-        filename = f"{data_type}_template.{format}"
-
-        return FileResponse(
-            path=template_file,
-            filename=filename,
-            media_type=media_types.get(format, "application/octet-stream"),
+    if not template_file.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"Template file {filename} not found",
         )
+
+    # Determine media type
+    media_types = {
+        "csv": "text/csv",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }
+
+    download_filename = f"{data_type}_template.{format}"
+
+    return FileResponse(
+        path=template_file,
+        filename=download_filename,
+        media_type=media_types.get(format, "application/octet-stream"),
+    )
 
 
 @router.get("/schedule/{schedule_id}/export/all")
@@ -367,9 +381,10 @@ async def export_schedule_package(
         # Emit export event
         await emit_data_exported(
             user_id=current_user.id,
-            data={
+            data_type="schedule",
+            format=format,
+            details={
                 "schedule_id": schedule_id,
-                "format": format,
                 "includes": {
                     "assignments": include_assignments,
                     "conflicts": include_conflicts,
