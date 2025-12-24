@@ -32,7 +32,7 @@ export default function Resources() {
   });
 
   // Handle resource click
-  const handleResourceClick = (resource: Resource) => {
+  const handleResourceClick = (resource: any) => {
     console.log('Resource clicked:', resource);
     // Open resource details modal or navigate to details page
   };
@@ -43,7 +43,7 @@ export default function Resources() {
       <div className="space-y-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <h3 className="text-sm font-medium text-red-800">Error Loading Resources</h3>
-          <p className="text-sm text-red-700 mt-1">{resourcesError.message}</p>
+          <p className="text-sm text-red-700 mt-1">{(resourcesError as any)?.message || 'Unknown error'}</p>
           <button
             onClick={() => refetchResources()}
             className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium"

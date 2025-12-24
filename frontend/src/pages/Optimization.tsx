@@ -62,7 +62,7 @@ export default function Optimization() {
       }, 1000);
     },
     onError: (error) => {
-      toast.error(`Failed to start optimization: ${error.message}`);
+      toast.error(`Failed to start optimization: ${(error as any)?.message || 'Unknown error'}`);
     },
   });
 
@@ -76,7 +76,10 @@ export default function Optimization() {
   const handleOptimize = () => {
     const request: OptimizationRequest = {
       problemId: 'current', // This would come from the current schedule
-      solver: solverConfig,
+      solver: {
+        ...solverConfig,
+        config: {},
+      },
       objectives: [selectedObjective],
       incremental: true,
     };

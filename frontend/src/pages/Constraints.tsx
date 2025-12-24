@@ -34,7 +34,7 @@ export default function Constraints() {
       toast.success('Constraint added');
     },
     onError: (error) => {
-      toast.error(`Failed to add constraint: ${error.message}`);
+      toast.error(`Failed to add constraint: ${(error as any)?.message || 'Unknown error'}`);
     },
   });
 
@@ -47,7 +47,7 @@ export default function Constraints() {
       toast.success('Constraint updated');
     },
     onError: (error) => {
-      toast.error(`Failed to update constraint: ${error.message}`);
+      toast.error(`Failed to update constraint: ${(error as any)?.message || 'Unknown error'}`);
     },
   });
 
@@ -59,7 +59,7 @@ export default function Constraints() {
       toast.success('Constraint deleted');
     },
     onError: (error) => {
-      toast.error(`Failed to delete constraint: ${error.message}`);
+      toast.error(`Failed to delete constraint: ${(error as any)?.message || 'Unknown error'}`);
     },
   });
 
@@ -71,7 +71,7 @@ export default function Constraints() {
       toast.success('Constraint toggled');
     },
     onError: (error) => {
-      toast.error(`Failed to toggle constraint: ${error.message}`);
+      toast.error(`Failed to toggle constraint: ${(error as any)?.message || 'Unknown error'}`);
     },
   });
 

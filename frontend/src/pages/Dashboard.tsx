@@ -113,7 +113,7 @@ export default function Dashboard() {
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
           <p className="text-sm text-red-700 mt-1">
-            {statsError?.message || activitiesError?.message || 'Failed to load dashboard data'}
+            {(statsError as any)?.message || (activitiesError as any)?.message || 'Failed to load dashboard data'}
           </p>
         </div>
       </div>

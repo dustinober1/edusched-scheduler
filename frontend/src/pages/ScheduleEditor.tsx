@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import ScheduleCalendar from '../components/ScheduleCalendar';
 import ConstraintBuilder from '../components/ConstraintBuilder';
 import {
-  PlusIcon,
   ArrowDownTrayIcon,
   PlayIcon,
   ExclamationTriangleIcon,
-  ArrowPathIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { schedulesApi, assignmentsApi, optimizationApi } from '../api/endpoints';
-import { Assignment, Problem, Constraint, OptimizationRequest } from '../types';
+import { Assignment, Problem, OptimizationRequest } from '../types';
 
 export default function ScheduleEditor() {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'schedule' | 'constraints' | 'optimization'>('schedule');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [, setHasUnsavedChanges] = useState(false);
 
   // Fetch schedule/problem data
   const {
@@ -52,8 +50,8 @@ export default function ScheduleEditor() {
       navigate(`/schedule/editor/${data.id}`);
       toast.success('Schedule created successfully');
     },
-    onError: (error) => {
-      toast.error(`Failed to create schedule: ${error.message}`);
+    onError: (error: any) => {
+      toast.error(`Failed to create schedule: ${error?.message || 'Unknown error'}`);
     },
   });
 
@@ -65,8 +63,8 @@ export default function ScheduleEditor() {
       queryClient.invalidateQueries({ queryKey: ['assignments', id] });
       toast.success('Assignment updated');
     },
-    onError: (error) => {
-      toast.error(`Failed to update assignment: ${error.message}`);
+    onError: (error: any) => {
+      toast.error(`Failed to update assignment: ${error?.message || 'Unknown error'}`);
     },
   });
 
@@ -78,8 +76,8 @@ export default function ScheduleEditor() {
       queryClient.invalidateQueries({ queryKey: ['assignments', id] });
       toast.success('Assignment deleted');
     },
-    onError: (error) => {
-      toast.error(`Failed to delete assignment: ${error.message}`);
+    onError: (error: any) => {
+      toast.error(`Failed to delete assignment: ${error?.message || 'Unknown error'}`);
     },
   });
 
@@ -94,8 +92,8 @@ export default function ScheduleEditor() {
       queryClient.invalidateQueries({ queryKey: ['assignments', id] });
       toast.success('Assignment moved');
     },
-    onError: (error) => {
-      toast.error(`Failed to move assignment: ${error.message}`);
+    onError: (error: any) => {
+      toast.error(`Failed to move assignment: ${error?.message || 'Unknown error'}`);
     },
   });
 
@@ -118,25 +116,24 @@ export default function ScheduleEditor() {
         });
       }, 1000);
     },
-    onError: (error) => {
-      toast.error(`Failed to start optimization: ${error.message}`);
+    onError: (error: any) => {
+      toast.error(`Failed to start optimization: ${error?.message || 'Unknown error'}`);
     },
   });
 
   // Handle assignment click
-  const handleAssignmentClick = (assignment: Assignment) => {
+  const handleAssignmentClick = (assignment: any) => {
     // Open assignment details modal or navigate to details page
     console.log('Assignment clicked:', assignment);
   };
 
   // Handle date selection (create new assignment)
-  const handleDateSelect = (dateInfo: any) => {
+  const handleDateSelect = (start: Date, end: Date) => {
     if (!id) return;
 
     const newAssignment: Partial<Assignment> = {
-      startTime: dateInfo.start,
-      endTime: dateInfo.end,
-      resourceId: dateInfo.resource?.id,
+      startTime: start,
+      endTime: end,
       // Prompt user for session details
     };
 
@@ -145,11 +142,11 @@ export default function ScheduleEditor() {
   };
 
   // Handle assignment drop (move)
-  const handleAssignmentDrop = (assignmentId: string, newTime: Date, resourceId?: string) => {
+  const handleAssignmentDrop = (assignment: any, newDate: Date) => {
     moveAssignmentMutation.mutate({
-      assignmentId,
-      newTime: newTime.toISOString(),
-      newResourceId,
+      assignmentId: assignment.id,
+      newTime: newDate.toISOString(),
+      newResourceId: assignment.extendedProps?.room,
     });
   };
 
@@ -204,7 +201,7 @@ export default function ScheduleEditor() {
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <h3 className="text-sm font-medium text-red-800">Error Loading Schedule</h3>
         <p className="text-sm text-red-700 mt-1">
-          {problemError?.message || assignmentsError?.message}
+          {(problemError as any)?.message || (assignmentsError as any)?.message}
         </p>
       </div>
     );
@@ -284,13 +281,13 @@ export default function ScheduleEditor() {
       {activeTab === 'schedule' && (
         <div>
           {/* Conflict Warning */}
-          {assignments.some((a) => a.conflicts && a.conflicts.length > 0) && (
+          {assignments.some((a: any) => a.conflicts && a.conflicts.length > 0) && (
             <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <div className="flex">
                 <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-yellow-800">
-                    {assignments.filter((a) => a.conflicts?.length).length} conflicts detected
+                    {assignments.filter((a: any) => a.conflicts?.length).length} conflicts detected
                   </h3>
                   <p className="text-sm text-yellow-700 mt-1">
                     Some assignments have conflicts. Review the Constraints tab to resolve them.

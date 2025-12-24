@@ -21,6 +21,7 @@ apiClient.interceptors.request.use(
     }
 
     // Add request timestamp
+    // @ts-ignore
     config.metadata = { startTime: new Date() };
 
     return config;
@@ -35,6 +36,7 @@ apiClient.interceptors.response.use(
   (response) => {
     // Log request duration
     const endTime = new Date();
+    // @ts-ignore
     const duration = endTime.getTime() - response.config.metadata.startTime.getTime();
     console.log(`API Request to ${response.config.url} took ${duration}ms`);
 

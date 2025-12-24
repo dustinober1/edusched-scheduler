@@ -170,7 +170,7 @@ export default function ScheduleCalendar({
           headerToolbar={false} // Custom toolbar above
           height="auto"
           editable={editable}
-          selectable={editable && onDateSelect}
+          selectable={!!(editable && onDateSelect)}
           selectMirror={true}
           dayMaxEvents={true}
           weekends={true}
