@@ -103,4 +103,6 @@ Thumbs.db
 *.log
 node_modules/
 
+# Development tools
+.claude/
 .contextstream/
