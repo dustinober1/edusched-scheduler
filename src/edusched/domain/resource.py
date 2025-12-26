@@ -364,9 +364,16 @@ class Resource:
                         return False
             else:
                 # Regular attribute matching
-                if key not in self.attributes:
-                    return False
-                if self.attributes[key] != required_value:
+                # First check if this is a standard field on the Resource object
+                if hasattr(self, key):
+                    if getattr(self, key) != required_value:
+                        return False
+                # Then check if it is in the custom attributes
+                elif key in self.attributes:
+                    if self.attributes[key] != required_value:
+                        return False
+                # If the key is not found in either place, the requirement is not met
+                else:
                     return False
 
         return True

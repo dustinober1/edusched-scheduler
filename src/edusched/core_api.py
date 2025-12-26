@@ -9,6 +9,7 @@ from edusched.errors import BackendError, MissingOptionalDependency, ValidationE
 
 # Import solver backends
 from edusched.solvers.heuristic import HeuristicSolver
+from edusched.solvers.genetic_algorithm import GeneticAlgorithmSolver
 
 try:
     from edusched.solvers.ortools import ORToolsSolver
@@ -62,6 +63,8 @@ def solve(
             solver = HeuristicSolver()
     elif backend == "heuristic":
         solver = HeuristicSolver()
+    elif backend == "genetic":
+        solver = GeneticAlgorithmSolver()
     elif backend == "ortools":
         if ORTOOLS_AVAILABLE:
             solver = ORToolsSolver()

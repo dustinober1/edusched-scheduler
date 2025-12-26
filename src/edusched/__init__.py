@@ -13,6 +13,13 @@ from edusched.constraints.hard_constraints import (
     NoOverlap,
     WithinDateRange,
 )
+from edusched.constraints.composite_constraints import (
+    AndConstraint,
+    OrConstraint,
+    NotConstraint,
+    XorConstraint,
+    ConstraintBuilder,
+)
 
 # Main API
 from edusched.core_api import solve
@@ -38,10 +45,31 @@ from edusched.objectives.objectives import (
     MinimizeEveningSessions,
     SpreadEvenlyAcrossTerm,
 )
+from edusched.objectives.multi_objective import (
+    MultiObjectiveOptimizer,
+    EnhancedObjectiveScorer,
+    AchievementScalarizingFunction,
+    ObjectiveComparisonTool
+)
+from edusched.io.import_export import (
+    ImportExportManager,
+    JSONHandler,
+    CSVHandler,
+    ExcelHandler
+)
+from edusched.plugins.base import (
+    PluginManager,
+    plugin_manager,
+    PluginInterface,
+    ConstraintPlugin,
+    SolverPlugin,
+    ObjectivePlugin
+)
 
 # Solver backend imports
 from edusched.solvers.base import SolverBackend
 from edusched.solvers.heuristic import HeuristicSolver
+from edusched.solvers.genetic_algorithm import GeneticAlgorithmSolver
 
 __all__ = [
     # Version
@@ -63,14 +91,37 @@ __all__ = [
     "MinGapBetweenOccurrences",
     "WithinDateRange",
     "AttributeMatch",
+    "AndConstraint",
+    "OrConstraint",
+    "NotConstraint",
+    "XorConstraint",
+    "ConstraintBuilder",
     # Objectives
     "Objective",
     "SpreadEvenlyAcrossTerm",
     "MinimizeEveningSessions",
     "BalanceInstructorLoad",
+    # Multi-objective optimization
+    "MultiObjectiveOptimizer",
+    "EnhancedObjectiveScorer",
+    "AchievementScalarizingFunction",
+    "ObjectiveComparisonTool",
+    # Import/Export
+    "ImportExportManager",
+    "JSONHandler",
+    "CSVHandler",
+    "ExcelHandler",
+    # Plugins
+    "PluginManager",
+    "plugin_manager",
+    "PluginInterface",
+    "ConstraintPlugin",
+    "SolverPlugin",
+    "ObjectivePlugin",
     # Solvers
     "SolverBackend",
     "HeuristicSolver",
+    "GeneticAlgorithmSolver",
     # API
     "solve",
     # Errors
