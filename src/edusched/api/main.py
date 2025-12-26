@@ -5,6 +5,7 @@ Provides REST API for schedule generation, management, and export.
 
 try:
     from contextlib import asynccontextmanager
+    import logging
     from typing import List
 
     from fastapi import FastAPI, HTTPException, Request, Response
@@ -23,12 +24,14 @@ if FASTAPI_AVAILABLE:
     from edusched.api.dependencies import check_rate_limit
     from edusched.api.routes import files, schedules
 
+    logger = logging.getLogger(__name__)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         """Manage application lifecycle."""
         # Startup
-        print("🚀 EduSched API starting up...")
-        print(f"Version: {__version__}")
+        logger.info("EduSched API starting up...")
+        logger.info("Version: %s", __version__)
 
         # Initialize any necessary resources
         # For example: database connections, cache, etc.
@@ -36,7 +39,7 @@ if FASTAPI_AVAILABLE:
         yield
 
         # Shutdown
-        print("🛑 EduSched API shutting down...")
+        logger.info("EduSched API shutting down...")
 
     # Create FastAPI app
     app = FastAPI(
@@ -173,6 +176,48 @@ if FASTAPI_AVAILABLE:
         # Add rate limit headers
         response.headers["X-RateLimit-Limit"] = "100"
         response.headers["X-RateLimit-Remaining"] = "99"
+
+        return response
+
+    # Security middleware
+    @app.middleware("http")
+    async def security_middleware(request: Request, call_next):
+        """Add security headers and enforce request body size limits."""
+        max_body_bytes = int(
+            request.headers.get("x-max-body-bytes", "0")
+            or request.app.state.__dict__.get("max_body_bytes", 0)
+            or 2_000_000
+        )
+
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                if int(content_length) > max_body_bytes:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": "Payload Too Large",
+                            "message": f"Request body exceeds limit of {max_body_bytes} bytes",
+                            "status_code": 413,
+                        },
+                    )
+            except ValueError:
+                pass
+
+        response = await call_next(request)
+
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
+
+        if request.url.scheme in {"https", "wss"}:
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
 
         return response
 

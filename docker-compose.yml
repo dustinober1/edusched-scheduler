@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      EDUSCHED_ALLOW_ANONYMOUS: "false"
+      EDUSCHED_JWT_SECRET: "change-me"
+      EDUSCHED_DB_PATH: "/app/data/edusched.sqlite3"
+      EDUSCHED_JWT_ISSUER: ""
+      EDUSCHED_JWT_AUDIENCE: ""
+    volumes:
+      - ./data:/app/data

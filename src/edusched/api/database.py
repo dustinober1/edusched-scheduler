@@ -5,6 +5,9 @@ In later phases, this would be replaced with a proper database
 like PostgreSQL or MongoDB.
 """
 
+import json
+import os
+import sqlite3
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -33,8 +36,35 @@ class InMemoryDatabase:
 
     def __init__(self):
         """Initialize the in-memory database."""
-        self.schedules: Dict[str, ScheduleRecord] = {}
-        self.user_schedules: Dict[str, List[str]] = {}  # user_id -> list of schedule_ids
+        db_path = os.getenv("EDUSCHED_DB_PATH", os.path.join("data", "edusched.sqlite3"))
+        os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
+        self._init_schema()
+
+    def _init_schema(self) -> None:
+        cur = self._conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schedules (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                assignments_json TEXT NOT NULL,
+                metadata_json TEXT NOT NULL,
+                solver_config_json TEXT NOT NULL
+            )
+            """
+        )
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_schedules_user_id ON schedules(user_id)")
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_schedules_updated_at ON schedules(updated_at)"
+        )
+        self._conn.commit()
 
     def create_schedule(
         self,
@@ -59,29 +89,29 @@ class InMemoryDatabase:
         schedule_id = str(uuid.uuid4())
         now = datetime.now()
 
-        # Convert assignments to dict
         assignment_dicts = [asdict(a) for a in assignments]
 
-        schedule = ScheduleRecord(
-            id=schedule_id,
-            name=name,
-            user_id=user_id,
-            status="active",
-            created_at=now,
-            updated_at=now,
-            assignments=assignment_dicts,
-            metadata=metadata,
-            solver_config=solver_config,
+        cur = self._conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO schedules (
+                id, name, user_id, status, created_at, updated_at,
+                assignments_json, metadata_json, solver_config_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                schedule_id,
+                name,
+                user_id,
+                "active",
+                now.isoformat(),
+                now.isoformat(),
+                json.dumps(assignment_dicts),
+                json.dumps(metadata or {}),
+                json.dumps(solver_config or {}),
+            ),
         )
-
-        # Store schedule
-        self.schedules[schedule_id] = schedule
-
-        # Update user index
-        if user_id not in self.user_schedules:
-            self.user_schedules[user_id] = []
-        self.user_schedules[user_id].append(schedule_id)
-
+        self._conn.commit()
         return schedule_id
 
     def get_schedule(self, schedule_id: str) -> Optional[ScheduleRecord]:
@@ -93,7 +123,23 @@ class InMemoryDatabase:
         Returns:
             Schedule record or None if not found
         """
-        return self.schedules.get(schedule_id)
+        cur = self._conn.cursor()
+        cur.execute("SELECT * FROM schedules WHERE id = ?", (schedule_id,))
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        return ScheduleRecord(
+            id=str(row["id"]),
+            name=str(row["name"]),
+            user_id=str(row["user_id"]),
+            status=str(row["status"]),
+            created_at=datetime.fromisoformat(str(row["created_at"])),
+            updated_at=datetime.fromisoformat(str(row["updated_at"])),
+            assignments=json.loads(str(row["assignments_json"]) or "[]"),
+            metadata=json.loads(str(row["metadata_json"]) or "{}"),
+            solver_config=json.loads(str(row["solver_config_json"]) or "{}"),
+        )
 
     def update_schedule(
         self,
@@ -113,20 +159,42 @@ class InMemoryDatabase:
         Returns:
             True if updated, False if not found
         """
-        schedule = self.schedules.get(schedule_id)
+        schedule = self.get_schedule(schedule_id)
         if not schedule:
             return False
 
-        # Update fields
-        if name is not None:
-            schedule.name = name
-        if assignments is not None:
-            schedule.assignments = [asdict(a) for a in assignments]
+        new_name = name if name is not None else schedule.name
+        new_assignments = (
+            [asdict(a) for a in assignments] if assignments is not None else schedule.assignments
+        )
+        new_metadata = schedule.metadata
         if metadata is not None:
-            schedule.metadata.update(metadata)
+            new_metadata = {**(schedule.metadata or {}), **metadata}
 
-        schedule.updated_at = datetime.now()
-        return True
+        new_status = schedule.status
+        if metadata is not None and "status" in metadata and metadata["status"] is not None:
+            new_status = str(metadata["status"])
+
+        now = datetime.now()
+
+        cur = self._conn.cursor()
+        cur.execute(
+            """
+            UPDATE schedules
+            SET name = ?, status = ?, updated_at = ?, assignments_json = ?, metadata_json = ?
+            WHERE id = ?
+            """,
+            (
+                new_name,
+                new_status,
+                now.isoformat(),
+                json.dumps(new_assignments),
+                json.dumps(new_metadata or {}),
+                schedule_id,
+            ),
+        )
+        self._conn.commit()
+        return cur.rowcount > 0
 
     def delete_schedule(self, schedule_id: str) -> bool:
         """Delete a schedule.
@@ -137,20 +205,10 @@ class InMemoryDatabase:
         Returns:
             True if deleted, False if not found
         """
-        schedule = self.schedules.get(schedule_id)
-        if not schedule:
-            return False
-
-        # Remove from schedules
-        del self.schedules[schedule_id]
-
-        # Remove from user index
-        if schedule.user_id in self.user_schedules:
-            self.user_schedules[schedule.user_id].remove(schedule_id)
-            if not self.user_schedules[schedule.user_id]:
-                del self.user_schedules[schedule.user_id]
-
-        return True
+        cur = self._conn.cursor()
+        cur.execute("DELETE FROM schedules WHERE id = ?", (schedule_id,))
+        self._conn.commit()
+        return cur.rowcount > 0
 
     def get_user_schedules(
         self, user_id: str, skip: int = 0, limit: int = 50
@@ -165,14 +223,35 @@ class InMemoryDatabase:
         Returns:
             List of schedule records
         """
-        schedule_ids = self.user_schedules.get(user_id, [])
-        schedules = [self.schedules[sid] for sid in schedule_ids if sid in self.schedules]
+        cur = self._conn.cursor()
+        cur.execute(
+            """
+            SELECT * FROM schedules
+            WHERE user_id = ?
+            ORDER BY updated_at DESC
+            LIMIT ? OFFSET ?
+            """,
+            (user_id, int(limit), int(skip)),
+        )
+        rows = cur.fetchall()
 
-        # Sort by updated_at descending
-        schedules.sort(key=lambda s: s.updated_at, reverse=True)
+        schedules: List[ScheduleRecord] = []
+        for row in rows:
+            schedules.append(
+                ScheduleRecord(
+                    id=str(row["id"]),
+                    name=str(row["name"]),
+                    user_id=str(row["user_id"]),
+                    status=str(row["status"]),
+                    created_at=datetime.fromisoformat(str(row["created_at"])),
+                    updated_at=datetime.fromisoformat(str(row["updated_at"])),
+                    assignments=json.loads(str(row["assignments_json"]) or "[]"),
+                    metadata=json.loads(str(row["metadata_json"]) or "{}"),
+                    solver_config=json.loads(str(row["solver_config_json"]) or "{}"),
+                )
+            )
 
-        # Apply pagination
-        return schedules[skip : skip + limit]
+        return schedules
 
     def count_user_schedules(self, user_id: str) -> int:
         """Count schedules for a user.
@@ -183,7 +262,10 @@ class InMemoryDatabase:
         Returns:
             Number of schedules
         """
-        return len(self.user_schedules.get(user_id, []))
+        cur = self._conn.cursor()
+        cur.execute("SELECT COUNT(1) AS c FROM schedules WHERE user_id = ?", (user_id,))
+        row = cur.fetchone()
+        return int(row["c"]) if row else 0
 
     def search_schedules(
         self,
@@ -203,20 +285,31 @@ class InMemoryDatabase:
         Returns:
             List of matching schedules
         """
-        schedules = list(self.schedules.values())
+        query = "SELECT id FROM schedules WHERE 1=1"
+        params: List[Any] = []
 
-        # Apply filters
         if user_id:
-            schedules = [s for s in schedules if s.user_id == user_id]
+            query += " AND user_id = ?"
+            params.append(user_id)
         if name_filter:
-            schedules = [s for s in schedules if name_filter.lower() in s.name.lower()]
+            query += " AND LOWER(name) LIKE ?"
+            params.append(f"%{name_filter.lower()}%")
         if status_filter:
-            schedules = [s for s in schedules if s.status == status_filter]
+            query += " AND status = ?"
+            params.append(status_filter)
 
-        # Sort by updated_at descending
-        schedules.sort(key=lambda s: s.updated_at, reverse=True)
+        query += " ORDER BY updated_at DESC LIMIT ?"
+        params.append(int(limit))
 
-        return schedules[:limit]
+        cur = self._conn.cursor()
+        cur.execute(query, tuple(params))
+        rows = cur.fetchall()
+        schedules: List[ScheduleRecord] = []
+        for row in rows:
+            schedule = self.get_schedule(str(row["id"]))
+            if schedule is not None:
+                schedules.append(schedule)
+        return schedules
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get database statistics.
@@ -224,17 +317,20 @@ class InMemoryDatabase:
         Returns:
             Statistics dictionary
         """
-        total_schedules = len(self.schedules)
-        total_users = len(self.user_schedules)
+        cur = self._conn.cursor()
+        cur.execute("SELECT COUNT(1) AS c FROM schedules")
+        total_schedules_row = cur.fetchone()
+        total_schedules = int(total_schedules_row["c"]) if total_schedules_row else 0
 
-        # Status distribution
-        status_counts = {}
-        for schedule in self.schedules.values():
-            status = schedule.status
-            status_counts[status] = status_counts.get(status, 0) + 1
+        cur.execute("SELECT COUNT(DISTINCT user_id) AS c FROM schedules")
+        total_users_row = cur.fetchone()
+        total_users = int(total_users_row["c"]) if total_users_row else 0
 
-        # User distribution
-        user_schedule_counts = [len(schedule_ids) for schedule_ids in self.user_schedules.values()]
+        cur.execute("SELECT status, COUNT(1) AS c FROM schedules GROUP BY status")
+        status_counts: Dict[str, int] = {str(r["status"]): int(r["c"]) for r in cur.fetchall()}
+
+        cur.execute("SELECT user_id, COUNT(1) AS c FROM schedules GROUP BY user_id")
+        user_schedule_counts = [int(r["c"]) for r in cur.fetchall()]
 
         return {
             "total_schedules": total_schedules,
@@ -250,9 +346,18 @@ class InMemoryDatabase:
         Returns:
             All data as dictionary
         """
+        cur = self._conn.cursor()
+        cur.execute("SELECT id FROM schedules")
+        rows = cur.fetchall()
+        schedules: Dict[str, Any] = {}
+        for row in rows:
+            schedule_id = str(row["id"])
+            schedule = self.get_schedule(schedule_id)
+            if schedule is not None:
+                schedules[schedule_id] = asdict(schedule)
+
         return {
-            "schedules": {sid: asdict(schedule) for sid, schedule in self.schedules.items()},
-            "user_schedules": self.user_schedules,
+            "schedules": schedules,
             "exported_at": datetime.now().isoformat(),
         }
 
@@ -266,22 +371,44 @@ class InMemoryDatabase:
             True if successful
         """
         try:
-            # Clear existing data
-            self.schedules.clear()
-            self.user_schedules.clear()
+            cur = self._conn.cursor()
+            cur.execute("DELETE FROM schedules")
 
-            # Import schedules
             for schedule_id, schedule_data in data.get("schedules", {}).items():
-                # Convert datetime strings back to datetime objects
-                schedule_data["created_at"] = datetime.fromisoformat(schedule_data["created_at"])
-                schedule_data["updated_at"] = datetime.fromisoformat(schedule_data["updated_at"])
+                created_at = schedule_data.get("created_at")
+                updated_at = schedule_data.get("updated_at")
 
-                schedule = ScheduleRecord(**schedule_data)
-                self.schedules[schedule_id] = schedule
+                if isinstance(created_at, datetime):
+                    created_at_str = created_at.isoformat()
+                else:
+                    created_at_str = str(created_at)
 
-            # Import user indexes
-            self.user_schedules = data.get("user_schedules", {})
+                if isinstance(updated_at, datetime):
+                    updated_at_str = updated_at.isoformat()
+                else:
+                    updated_at_str = str(updated_at)
 
+                cur.execute(
+                    """
+                    INSERT INTO schedules (
+                        id, name, user_id, status, created_at, updated_at,
+                        assignments_json, metadata_json, solver_config_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        str(schedule_id),
+                        str(schedule_data.get("name", "")),
+                        str(schedule_data.get("user_id", "")),
+                        str(schedule_data.get("status", "active")),
+                        created_at_str,
+                        updated_at_str,
+                        json.dumps(schedule_data.get("assignments", [])),
+                        json.dumps(schedule_data.get("metadata", {})),
+                        json.dumps(schedule_data.get("solver_config", {})),
+                    ),
+                )
+
+            self._conn.commit()
             return True
         except Exception as e:
             print(f"Import error: {e}")

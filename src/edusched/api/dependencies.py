@@ -1,6 +1,12 @@
 """FastAPI dependencies for authentication and common functionality."""
 
-from typing import TYPE_CHECKING, Optional
+import base64
+import hmac
+import json
+import os
+import time
+from hashlib import sha256
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -37,9 +43,17 @@ async def get_current_user(
     # Placeholder user model
     from edusched.api.models import User
 
-    # For development, accept any token and return a mock user
+    allow_anonymous = os.getenv("EDUSCHED_ALLOW_ANONYMOUS", "true").lower() == "true"
+
+    # For development, optionally allow anonymous access
     if credentials is None:
-        # No token provided - create anonymous user for testing
+        if not allow_anonymous:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing bearer token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         return User(
             id="anonymous",
             username="anonymous",
@@ -48,33 +62,116 @@ async def get_current_user(
             is_superuser=False,
         )
 
-    # For now, just validate that a token was provided
-    # In production, you would decode and validate the JWT token
     try:
-        # Placeholder token validation
-        # TODO: Implement proper JWT validation
         token = credentials.credentials
 
-        # For demo purposes, extract username from token if it looks like a simple token
-        if token.startswith("user:"):
-            username = token[5:]  # Remove "user:" prefix
-        else:
-            username = "demo_user"
+        jwt_secret = os.getenv("EDUSCHED_JWT_SECRET")
+        if not jwt_secret:
+            if allow_anonymous:
+                return User(
+                    id="demo",
+                    username="demo_user",
+                    email="demo_user@example.com",
+                    is_active=True,
+                    is_superuser=False,
+                )
+
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Server auth not configured (missing EDUSCHED_JWT_SECRET)",
+            )
+
+        payload = _decode_and_verify_hs256_jwt(token, jwt_secret)
+        _validate_claims(payload)
+
+        user_id = str(payload.get("sub") or payload.get("user_id") or payload.get("uid") or "")
+        username = str(payload.get("preferred_username") or payload.get("username") or "")
+        email = str(payload.get("email") or "")
+
+        if not user_id:
+            user_id = username or "user"
+        if not username:
+            username = user_id
+        if not email:
+            email = f"{username}@example.com"
+
+        is_active = bool(payload.get("is_active", True))
+        is_superuser = bool(payload.get("is_superuser", False))
 
         return User(
-            id="demo",
+            id=user_id,
             username=username,
-            email=f"{username}@example.com",
-            is_active=True,
-            is_superuser=False,
+            email=email,
+            is_active=is_active,
+            is_superuser=is_superuser,
         )
 
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def _b64url_decode(data: str) -> bytes:
+    padding_needed = (-len(data)) % 4
+    return base64.urlsafe_b64decode((data + ("=" * padding_needed)).encode("utf-8"))
+
+
+def _b64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode("utf-8").rstrip("=")
+
+
+def _decode_and_verify_hs256_jwt(token: str, secret: str) -> Dict[str, Any]:
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise ValueError("Invalid JWT format")
+
+    header_b64, payload_b64, signature_b64 = parts
+    header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
+    if header.get("alg") != "HS256":
+        raise ValueError("Unsupported JWT alg")
+
+    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+    expected_sig = hmac.new(secret.encode("utf-8"), signing_input, sha256).digest()
+    expected_sig_b64 = _b64url_encode(expected_sig)
+
+    if not hmac.compare_digest(expected_sig_b64, signature_b64):
+        raise ValueError("Invalid JWT signature")
+
+    payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+    return payload
+
+
+def _validate_claims(payload: Dict[str, Any]) -> None:
+    now = int(time.time())
+
+    exp = payload.get("exp")
+    if exp is not None:
+        if not isinstance(exp, (int, float)):
+            raise ValueError("Invalid exp claim")
+        if int(exp) < now:
+            raise ValueError("Token expired")
+
+    issuer = os.getenv("EDUSCHED_JWT_ISSUER")
+    if issuer:
+        if payload.get("iss") != issuer:
+            raise ValueError("Invalid issuer")
+
+    audience = os.getenv("EDUSCHED_JWT_AUDIENCE")
+    if audience:
+        aud = payload.get("aud")
+        if isinstance(aud, str):
+            valid = aud == audience
+        elif isinstance(aud, list):
+            valid = audience in aud
+        else:
+            valid = False
+        if not valid:
+            raise ValueError("Invalid audience")
 
 
 async def get_active_user(current_user: "User" = Depends(get_current_user)) -> "User":

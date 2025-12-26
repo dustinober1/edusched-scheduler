@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
@@ -30,6 +32,34 @@ from edusched.utils.export import get_format_extensions, get_supported_formats
 router = APIRouter()
 
 
+_SCHEDULE_NAME_RE = re.compile(r"^[A-Za-z0-9 _\-\.]{1,120}$")
+
+
+def _validate_schedule_name(name: str) -> str:
+    cleaned = (name or "").strip()
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Schedule name cannot be empty")
+    if len(cleaned) > 120:
+        raise HTTPException(status_code=400, detail="Schedule name too long (max 120 chars)")
+    if not _SCHEDULE_NAME_RE.match(cleaned):
+        raise HTTPException(
+            status_code=400,
+            detail="Schedule name contains invalid characters",
+        )
+    return cleaned
+
+
+def _validate_status(status: Optional[str]) -> Optional[str]:
+    if status is None:
+        return None
+    cleaned = status.strip()
+    if not cleaned:
+        return None
+    if cleaned not in {"active", "success", "no_solution", "error", "cancelled"}:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    return cleaned
+
+
 @router.post("/", response_model=ScheduleResponse)
 async def create_schedule(
     request_data: ScheduleRequest,
@@ -51,6 +81,7 @@ async def create_schedule(
         # Generate schedule name if not provided
         if not name:
             name = f"Schedule {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        name = _validate_schedule_name(name)
 
         # Emit solver started event
         await emit_solver_started(
@@ -230,10 +261,12 @@ async def update_schedule(
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Update schedule
+    validated_name = _validate_schedule_name(name) if name is not None else None
+    validated_status = _validate_status(status)
     success = db.update_schedule(
         schedule_id,
-        name=name,
-        metadata={"status": status} if status else None,
+        name=validated_name,
+        metadata={"status": validated_status} if validated_status else None,
     )
 
     if not success:
