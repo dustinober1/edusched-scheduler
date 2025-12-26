@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/teacher.py
-# hypothesis_version: 6.148.7
-
-[0.0, 3600, '%A', '%H:%M', 'Assignment', 'Available', 'Personal day', 'Qualified', 'after', 'before', 'course_count', 'daily_hours', 'days_teaching', 'end_time', 'friday', 'id', 'max_daily', 'max_daily_hours', 'max_weekly', 'max_weekly_hours', 'monday', 'name', 'non-empty string', 'preferred_days', 'preferred_times', 'saturday', 'start_time', 'sunday', 'thursday', 'total_hours', 'tuesday', 'wednesday', 'weekly_hours']

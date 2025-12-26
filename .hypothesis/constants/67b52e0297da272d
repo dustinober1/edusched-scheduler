@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/proximity_constraints.py
-# hypothesis_version: 6.148.7
-
-[0.5, 'Assignment', 'adjacent_building', 'campus_area', 'max_distance', 'nearby_floor', 'same_building', 'same_floor']

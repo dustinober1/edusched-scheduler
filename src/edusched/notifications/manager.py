@@ -632,7 +632,7 @@ class NotificationManager:
             ).time()
 
             return start_time <= current_time <= end_time
-        except Exception:
+        except (ValueError, TypeError):
             return False
 
     def _get_affected_recipients(self, change: Dict[str, Any]) -> List[str]:

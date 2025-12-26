@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/utils/building_filters.py
-# hypothesis_version: 6.148.7
-
-[0.0, 100, 3600, 'breakout', 'capacity', 'classroom', 'computers', 'study_room', 'total']

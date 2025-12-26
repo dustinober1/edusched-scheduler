@@ -2,6 +2,7 @@
 
 import csv
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -20,6 +21,9 @@ from edusched.domain.department import Department
 from edusched.domain.resource import Resource
 from edusched.domain.session_request import SessionRequest
 from edusched.domain.teacher import Teacher
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataImportError(Exception):
@@ -553,10 +557,10 @@ def create_sample_csv_files(output_dir: Union[str, Path]):
     ]
     write_csv_file(output_dir / "courses_sample.csv", courses_header, courses_data)
 
-    print(f"Sample CSV files created in: {output_dir}")
-    print("\nFiles created:")
+    logger.info("Sample CSV files created in: %s", output_dir)
+    logger.info("Files created:")
     for csv_file in output_dir.glob("*_sample.csv"):
-        print(f"  - {csv_file.name}")
+        logger.info("  - %s", csv_file.name)
 
 
 def write_csv_file(file_path: Path, header: List[str], data: List[List[str]]):

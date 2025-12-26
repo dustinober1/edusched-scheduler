@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/time_blockers.py
-# hypothesis_version: 6.148.7
-
-['10:00', '11:30', '12:00', '13:00', '13:30', '14:00', '15:00', '16:00', '16:30', '17:00', '17:30', '18:00', 'All-Hands Meeting', 'Department Meetings', 'Evening Setup', 'Lunch Break', 'One-hour lunch break', 'Registration Period', 'Research Seminar', 'Research Time', 'Thesis Defenses']

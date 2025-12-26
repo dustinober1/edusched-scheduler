@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/blackout_constraints.py
-# hypothesis_version: 6.148.7
-
-['Assignment', 'blackout', 'building blackout', 'hard.blackout_date']

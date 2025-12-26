@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/curriculum.py
-# hypothesis_version: 6.148.7
-
-[2.0, 100, 'Course not found', 'D', 'Major not found', 'Not implemented', 'annually', 'clinical', 'code', 'completed_courses', 'concentration', 'corequisite', 'course', 'credit', 'credits', 'details', 'dissertation', 'elective', 'error', 'failing', 'fall', 'gpa', 'gpa_status', 'hybrid', 'id', 'internship', 'lab', 'lecture', 'major', 'non-empty string', 'online', 'passing', 'positive number', 'prerequisite', 'requirement', 'requirements', 'research', 'satisfied', 'seminar', 'studio', 'thesis', 'title']

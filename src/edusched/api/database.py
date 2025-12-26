@@ -7,6 +7,7 @@ like PostgreSQL or MongoDB.
 
 import json
 import os
+import logging
 import sqlite3
 import uuid
 from dataclasses import asdict, dataclass
@@ -411,7 +412,7 @@ class InMemoryDatabase:
             self._conn.commit()
             return True
         except Exception as e:
-            print(f"Import error: {e}")
+            logging.getLogger(__name__).exception("Import error")
             return False
 
 

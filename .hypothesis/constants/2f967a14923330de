@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/student_constraints.py
-# hypothesis_version: 6.148.7
-
-[0.2, 0.3, 1.0, 3.0, 12.0, 100.0, 150.0, 200.0, 300.0, 500.0, '%A', 'A', 'Assignment', 'B', 'C', 'Curriculum', 'building_id', 'classroom', 'cohort_id', 'cohort_scheduling', 'course_id', 'day', 'distance', 'from_building', 'hard.prerequisite', 'lab', 'max_allowed', 'preference_scores', 'student_id', 'student_ids', 'time', 'to_building', 'violated_students', 'violations', 'walking_distance']

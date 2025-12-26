@@ -101,6 +101,7 @@ Thumbs.db
 *.db
 *.sqlite
 *.log
+data/
 node_modules/
 
 # Development tools

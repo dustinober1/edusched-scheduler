@@ -61,7 +61,10 @@ api = [
 icalendar = ["icalendar>=5.0.0"]
 dev = [
     "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.2.0",
+    "httpx>=0.24.0",
     "hypothesis>=6.0.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
@@ -91,6 +94,7 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.9"

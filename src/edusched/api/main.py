@@ -230,20 +230,23 @@ else:
 def run_dev_server():
     """Run the development server."""
     if not FASTAPI_AVAILABLE:
-        print("❌ FastAPI is not installed. Install with: pip install fastapi uvicorn")
+        logging.getLogger(__name__).error(
+            "FastAPI is not installed. Install with: pip install fastapi uvicorn"
+        )
         return
-
+ 
     import uvicorn
-
-    print("\n" + "=" * 50)
-    print("EduSched API Development Server")
-    print("=" * 50)
-    print(f"Version: {__version__}")
-    print("API Documentation: http://localhost:8000/docs")
-    print("ReDoc Documentation: http://localhost:8000/redoc")
-    print("Health Check: http://localhost:8000/health")
-    print("=" * 50 + "\n")
-
+ 
+    logger = logging.getLogger(__name__)
+    logger.info("%s", "=" * 50)
+    logger.info("EduSched API Development Server")
+    logger.info("%s", "=" * 50)
+    logger.info("Version: %s", __version__)
+    logger.info("API Documentation: http://localhost:8000/docs")
+    logger.info("ReDoc Documentation: http://localhost:8000/redoc")
+    logger.info("Health Check: http://localhost:8000/health")
+    logger.info("%s", "=" * 50)
+ 
     uvicorn.run(
         "edusched.api.main:app",
         host="0.0.0.0",

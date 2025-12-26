@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import pytest_asyncio
 import asyncio
 from typing import AsyncGenerator
 import httpx
@@ -12,6 +13,17 @@ TEST_API_URL = os.getenv("TEST_API_URL", "http://localhost:8000")
 TEST_FRONTEND_URL = os.getenv("TEST_FRONTEND_URL", "http://localhost:3000")
 TEST_DB_URL = os.getenv("TEST_DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/edusched_test")
 
+
+def pytest_collection_modifyitems(config, items):
+    """Skip E2E tests by default unless explicitly enabled."""
+    run_e2e = os.getenv("RUN_E2E", "0").lower() in {"1", "true", "yes"}
+    if run_e2e:
+        return
+
+    skip_marker = pytest.mark.skip(reason="E2E tests require a running backend; set RUN_E2E=1 to enable")
+    for item in items:
+        item.add_marker(skip_marker)
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
@@ -19,13 +31,13 @@ def event_loop():
     yield loop
     loop.close()
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def api_client() -> httpx.AsyncClient:
     """Create an HTTP client for API testing."""
     async with httpx.AsyncClient(base_url=TEST_API_URL, timeout=30.0) as client:
         yield client
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_token(api_client: httpx.AsyncClient) -> str:
     """Get authentication token for testing."""
     # Login with test credentials
@@ -37,7 +49,7 @@ async def auth_token(api_client: httpx.AsyncClient) -> str:
     data = response.json()
     return data["access_token"]
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_client(api_client: httpx.AsyncClient, auth_token: str) -> httpx.AsyncClient:
     """Create an authenticated API client."""
     api_client.headers["Authorization"] = f"Bearer {auth_token}"
@@ -45,7 +57,7 @@ async def authenticated_client(api_client: httpx.AsyncClient, auth_token: str) -
     # Clean up header
     del api_client.headers["Authorization"]
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_schedule_data():
     """Sample schedule data for testing."""
     return {
@@ -63,7 +75,7 @@ async def sample_schedule_data():
         ]
     }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_resource_data():
     """Sample resource data for testing."""
     return {
@@ -85,7 +97,7 @@ async def sample_resource_data():
         }
     }
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def cleanup_db():
     """Clean up database after tests."""
     yield

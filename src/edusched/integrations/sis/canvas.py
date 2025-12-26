@@ -4,9 +4,12 @@ Implements Canvas API integration for course, student, and enrollment data.
 """
 
 from datetime import datetime
+import logging
 from typing import Any, Dict, List, Optional
 
 from .base import Course, CourseSection, Enrollment, Instructor, SISProvider, Student
+
+logger = logging.getLogger(__name__)
 
 
 class CanvasProvider(SISProvider):
@@ -24,7 +27,7 @@ class CanvasProvider(SISProvider):
             try:
                 import requests
             except ImportError:
-                print("requests library required for Canvas integration")
+                logger.error("requests library required for Canvas integration")
                 return False
 
             self.base_url = credentials.get("base_url")
@@ -45,8 +48,8 @@ class CanvasProvider(SISProvider):
 
             return response.status_code == 200
 
-        except Exception as e:
-            print(f"Canvas authentication error: {e}")
+        except Exception:
+            logger.exception("Canvas authentication error")
             return False
 
     def test_connection(self) -> bool:
@@ -58,8 +61,8 @@ class CanvasProvider(SISProvider):
             response = requests.get(url, headers=self.headers)
             return response.status_code == 200
 
-        except Exception as e:
-            print(f"Canvas connection test failed: {e}")
+        except Exception:
+            logger.exception("Canvas connection test failed")
             return False
 
     def _make_request(
@@ -85,11 +88,15 @@ class CanvasProvider(SISProvider):
             if response.status_code < 400:
                 return response.json()
             else:
-                print(f"Canvas API error: {response.status_code} - {response.text}")
+                logger.error(
+                    "Canvas API error: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
                 return None
 
-        except Exception as e:
-            print(f"Canvas API request error: {e}")
+        except Exception:
+            logger.exception("Canvas API request error")
             return None
 
     def get_students(self, filters: Dict[str, Any] = None, limit: int = 1000) -> List[Student]:

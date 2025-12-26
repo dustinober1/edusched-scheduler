@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/problem.py
-# hypothesis_version: 6.148.7
-
-['Assignment', 'Building', 'Calendar', 'Constraint', 'Department', 'HolidayCalendar', 'Objective', 'Problem', 'Resource', 'SessionRequest', 'Teacher']

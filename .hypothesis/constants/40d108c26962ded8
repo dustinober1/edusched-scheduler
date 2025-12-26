@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/solvers/heuristic.py
-# hypothesis_version: 6.148.7
-
-[0.0, 1000, 'Assignment', 'ConstraintContext', 'InfeasibilityReport', 'Objective', 'Problem', 'ProblemIndices', 'Result', 'SessionRequest', 'feasible', 'heuristic', 'infeasible', 'partial', 'time_constraints']

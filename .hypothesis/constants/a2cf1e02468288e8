@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/domain/result.py
-# hypothesis_version: 6.148.7
-
-[0.0, '1.0', '2.0', 'Assignment', 'DataFrame export', 'Excel export', 'ICS export', 'Schedule', 'backend', 'cohort_id', 'dtend', 'dtstart', 'end_time', 'feasible', 'infeasible', 'objective_score', 'partial', 'prodid', 'request_id', 'resource_ids', 'schema_version', 'start_time', 'summary', 'uid', 'unknown', 'version', 'wb']

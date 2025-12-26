@@ -7,9 +7,12 @@ Handles bulk operations, sync conflict resolution, and real-time updates.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import logging
 from typing import Any, Dict, List, Optional
 
 from edusched.domain.result import Result
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -153,8 +156,8 @@ class GoogleCalendarProvider(CalendarProvider):
             self.service = build("calendar", "v3", credentials=creds)
             return True
 
-        except Exception as e:
-            print(f"Google Calendar auth error: {e}")
+        except Exception:
+            logger.exception("Google Calendar auth error")
             return False
 
     def create_event(self, event: CalendarEvent) -> Optional[str]:
@@ -202,8 +205,8 @@ class GoogleCalendarProvider(CalendarProvider):
 
             return result.get("id")
 
-        except Exception as e:
-            print(f"Error creating Google Calendar event: {e}")
+        except Exception:
+            logger.exception("Error creating Google Calendar event")
             return None
 
     def update_event(self, event_id: str, event: CalendarEvent) -> bool:
@@ -234,8 +237,8 @@ class GoogleCalendarProvider(CalendarProvider):
 
             return True
 
-        except Exception as e:
-            print(f"Error updating Google Calendar event: {e}")
+        except Exception:
+            logger.exception("Error updating Google Calendar event")
             return False
 
     def delete_event(self, event_id: str) -> bool:
@@ -247,8 +250,8 @@ class GoogleCalendarProvider(CalendarProvider):
             self.service.events().delete(calendarId="primary", eventId=event_id).execute()
             return True
 
-        except Exception as e:
-            print(f"Error deleting Google Calendar event: {e}")
+        except Exception:
+            logger.exception("Error deleting Google Calendar event")
             return False
 
     def get_event(self, event_id: str) -> Optional[CalendarEvent]:
@@ -277,8 +280,8 @@ class GoogleCalendarProvider(CalendarProvider):
 
             return event
 
-        except Exception as e:
-            print(f"Error getting Google Calendar event: {e}")
+        except Exception:
+            logger.exception("Error getting Google Calendar event")
             return None
 
     def list_events(
@@ -321,8 +324,8 @@ class GoogleCalendarProvider(CalendarProvider):
 
             return events
 
-        except Exception as e:
-            print(f"Error listing Google Calendar events: {e}")
+        except Exception:
+            logger.exception("Error listing Google Calendar events")
             return []
 
     def detect_conflicts(
@@ -365,8 +368,8 @@ class GoogleCalendarProvider(CalendarProvider):
 
             return calendars
 
-        except Exception as e:
-            print(f"Error getting Google Calendar list: {e}")
+        except Exception:
+            logger.exception("Error getting Google Calendar list")
             return []
 
     def _get_color_id(self, color: str) -> str:
@@ -407,7 +410,7 @@ class OutlookCalendarProvider(CalendarProvider):
                 import requests
                 from msal import ConfidentialClientApplication, PublicClientApplication
             except ImportError:
-                print("MSAL and requests libraries required for Outlook integration")
+                logger.error("MSAL and requests libraries required for Outlook integration")
                 return False
 
             # Get access token
@@ -435,8 +438,8 @@ class OutlookCalendarProvider(CalendarProvider):
             self.access_token = result["access_token"]
             return True
 
-        except Exception as e:
-            print(f"Outlook Calendar auth error: {e}")
+        except Exception:
+            logger.exception("Outlook Calendar auth error")
             return False
 
     def _make_request(self, method: str, endpoint: str, data: Dict = None) -> Optional[Dict]:
@@ -465,11 +468,15 @@ class OutlookCalendarProvider(CalendarProvider):
             if response.status_code < 400:
                 return response.json()
             else:
-                print(f"Outlook API error: {response.status_code} - {response.text}")
+                logger.error(
+                    "Outlook API error: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
                 return None
 
-        except Exception as e:
-            print(f"Outlook API request error: {e}")
+        except Exception:
+            logger.exception("Outlook API request error")
             return None
 
     def create_event(self, event: CalendarEvent) -> Optional[str]:

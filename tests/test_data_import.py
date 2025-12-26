@@ -196,8 +196,8 @@ cs102,1,48,"2024-01-15 09:00","2024-05-15 17:00",25,20,cs,bob_prof
     @patch('pandas.read_excel')
     def test_import_from_excel(self, mock_read_excel):
         """Test importing data from Excel format."""
+        pd = pytest.importorskip("pandas")
         # Mock pandas DataFrame
-        import pandas as pd
         df_data = {
             'id': ['excel_building'],
             'name': ['Excel Test Building'],

@@ -3,10 +3,10 @@
 import importlib
 import os
 import sys
+from importlib import metadata
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type
 from dataclasses import dataclass
-import pkg_resources
 
 
 @dataclass
@@ -165,18 +165,25 @@ class PluginLoader:
         """Load plugins from setuptools entry points."""
         count = 0
         try:
-            for entry_point in pkg_resources.iter_entry_points(entry_point_group):
+            entry_points = metadata.entry_points()
+            try:
+                group_entries = entry_points.select(group=entry_point_group)
+            except AttributeError:
+                # Compatibility with older entry_points() return types
+                group_entries = entry_points.get(entry_point_group, [])
+
+            for entry_point in group_entries:
                 try:
                     plugin = entry_point.load()()
                     if isinstance(plugin, PluginInterface):
                         if self.registry.register_plugin(plugin):
                             count += 1
+                except ImportError:
+                    continue
                 except Exception:
-                    # Skip plugins that fail to load
                     continue
         except Exception:
-            # Entry points might not be available in all environments
-            pass
+            return 0
         
         return count
 

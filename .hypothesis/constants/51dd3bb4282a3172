@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/solvers/incremental.py
-# hypothesis_version: 6.148.7
-
-[0.2, 0.5, 0.7, 1.0, 2.0, 1000, 'Assignment', 'Assignment not found', 'Problem', 'Result', 'add', 'assignment_id', 'course_id', 'end', 'existing_schedule', 'feasible', 'id', 'incremental', 'infeasible', 'modifications', 'move', 'new_time', 'occurrence_index', 'partial', 'preferred_time_slots', 'remove', 'request', 'result', 'start', 'type', 'valid_until']

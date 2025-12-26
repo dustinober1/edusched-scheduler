@@ -1,4 +1,0 @@
-# file: /Users/dustinober/Projects/Education_Manager/src/edusched/constraints/student_constraints.py
-# hypothesis_version: 6.148.7
-
-[1.0, 3.0, 12.0, 'Assignment', 'Curriculum', 'classroom', 'hard.prerequisite', 'lab', 'student_ids']

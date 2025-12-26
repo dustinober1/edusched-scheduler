@@ -3,18 +3,14 @@
 import json
 import csv
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Union
+from typing import Any, Dict, List, Union
 from io import StringIO
-import openpyxl
-from openpyxl import Workbook
-from openpyxl.worksheet.worksheet import Worksheet
 
+from edusched.errors import MissingOptionalDependency
 from edusched.domain.problem import Problem
 from edusched.domain.session_request import SessionRequest
 from edusched.domain.resource import Resource
 from edusched.domain.calendar import Calendar
-from edusched.constraints.hard_constraints import *
-from edusched.objectives.objectives import *
 
 
 class DataFormatHandler:
@@ -247,6 +243,13 @@ class ExcelHandler(DataFormatHandler):
     
     def import_data(self, file_path: str) -> Problem:
         """Import problem from Excel file."""
+        try:
+            import openpyxl
+        except ImportError as e:
+            raise MissingOptionalDependency(
+                "openpyxl is required for Excel import/export. Install with: pip install edusched[excel]"
+            ) from e
+
         workbook = openpyxl.load_workbook(file_path)
         
         requests = []
@@ -318,6 +321,13 @@ class ExcelHandler(DataFormatHandler):
     
     def export_data(self, problem: Problem, file_path: str = None) -> Union[bytes, None]:
         """Export problem to Excel file."""
+        try:
+            from openpyxl import Workbook
+        except ImportError as e:
+            raise MissingOptionalDependency(
+                "openpyxl is required for Excel import/export. Install with: pip install edusched[excel]"
+            ) from e
+
         workbook = Workbook()
         
         # Create requests sheet
